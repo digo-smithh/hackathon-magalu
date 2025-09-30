@@ -8,7 +8,7 @@ from sqlmodel import Session, select, or_
 import services
 from database import get_session
 from models import User, Mission, MissionParticipant
-from schemas import UserCreate, UserRead, MissionRead
+from schemas import UserCreate, UserRead, MissionRead, MissionReadWithParticipants
 
 router = APIRouter()
 
