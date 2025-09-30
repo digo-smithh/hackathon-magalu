@@ -93,11 +93,7 @@ def create_user(session: Session, user_in: UserCreate) -> User:
     user_dict = user_in.model_dump()
     user_dict["password"] = get_password_hash(user_in.password)
     
-    # --- FIX ---
-    # Manually set the updatedAt field to ensure it's not null
-    now = datetime.now(timezone.utc)
-    db_user = User(**user_dict, updatedAt=now)
-    # --- END FIX ---
+    db_user = User(**user_dict, updatedAt=datetime.now(timezone.utc))
     
     session.add(db_user)
     session.commit()
