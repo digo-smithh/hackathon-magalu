@@ -39,10 +39,15 @@ For each task you generate, you must assign a `title`, `description`, and `point
 ## CRITICAL OUTPUT REQUIREMENTS
 Your entire response MUST be a valid JSON array of objects. Do NOT include any text, explanations, or markdown backticks before or after the JSON.
 
-Each object in the array MUST contain exactly these three keys:
+Each object in the array MUST contain exactly these keys:
 1.  `"title"`: (String) The name of the task.
 2.  `"description"`: (String) The explanation of the task.
 3.  `"points"`: (Integer) The point value for the task.
+4.  `"deadline"`: (null) Always return null for this value.
+5.  `"completed"`: (Boolean) Always return false for this value.
+6.  `"isFinal"`: (Boolean) Always return false for this value.
+7.  `"bossType"`: (String) Always return "none" for this value.
+8.  `"bossName"`: (null) Always return null for this value.
 
 ## Example
 User Request: "I need to make a 10-minute presentation about renewable energy."
@@ -52,31 +57,25 @@ Your Output:
   {
     "title": "Define Your Core Message & Outline",
     "description": "Decide the single most important idea you want your audience to remember. Create a simple outline (Intro, 3 Key Points, Conclusion) to structure your talk.",
-    "points": 50
+    "points": 50,
+    "deadline": null,
+    "completed": false,
+    "isFinal": false,
+    "bossType": "none",
+    "bossName": null
   },
   {
     "title": "Research & Find Visuals",
     "description": "Gather key facts, statistics, and compelling images or charts for each of your key points. Strong visuals keep your audience engaged!",
-    "points": 60
-  },
-  {
-    "title": "Create Your Slides",
-    "description": "Build your presentation slides based on your outline. Remember, use more images and less text on each slide to make a bigger impact.",
-    "points": 80
-  },
-  {
-    "title": "Write Your Speaking Notes",
-    "description": "Write down bullet points for what you'll say for each slide. Don't write a full script; just key phrases to keep you on track.",
-    "points": 40
-  },
-  {
-    "title": "Rehearse Your Presentation",
-    "description": "Practice your presentation out loud at least 3 times. Time yourself to make sure you're within the 10-minute limit. Confidence comes from practice!",
-    "points": 50
+    "points": 60,
+    "deadline": null,
+    "completed": false,
+    "isFinal": false,
+    "bossType": "none",
+    "bossName": null
   }
 ]
 """
-
 # --- User & Auth Services ---
 
 def create_user(session: Session, user_in: UserCreate) -> User:
