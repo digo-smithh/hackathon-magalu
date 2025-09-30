@@ -60,7 +60,7 @@ def generate_tasks_from_prompt(user_prompt: str) -> list:
         raise HTTPException(status_code=500, detail="Google API Key is not configured on the server.")
         
     try:
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         full_prompt = f"{SYSTEM_PROMPT}\nUser's Request: \"{user_prompt}\"\nYour Output:"
         response = model.generate_content(full_prompt)
         cleaned_response = response.text.strip().replace("```json", "").replace("```", "").strip()
@@ -115,6 +115,8 @@ class Mission(MissionBase, table=True):
     tasks: List["Task"] = Relationship(back_populates="mission")
     participants: List["MissionParticipant"] = Relationship(back_populates="mission")
 
+
+
 class TaskBase(SQLModel):
     title: str
     description: Optional[str] = None
@@ -150,6 +152,7 @@ class UserRead(UserBase):
 class MissionCreate(MissionBase):
     createdById: uuid.UUID
 
+
 class MissionRead(MissionBase):
     id: uuid.UUID
     createdById: uuid.UUID
@@ -183,6 +186,8 @@ class TaskSuggestion(SQLModel):
     description: str
     points: int
 
+class MissionWithTasksCreate(MissionCreate):
+    tasks: List[TaskSuggestion]
 # --- 5. FastAPI App and DB Session ---
 
 app = FastAPI(title="QuestTasks API")
@@ -311,6 +316,36 @@ def get_mission_leaderboard(mission_id: uuid.UUID, session: Session = Depends(ge
         if not mission:
             raise HTTPException(status_code=404, detail="Mission not found")
     return participants
+
+# In the "Mission Endpoints" section
+@app.post("/missions/with-tasks", response_model=MissionRead, tags=["Missions"])
+def create_mission_with_tasks(mission_data: MissionWithTasksCreate, session: Session = Depends(get_session)):
+    """
+    Creates a new mission and its associated tasks in a single transaction.
+    """
+    # 1. Create the Mission object first, but don't include the tasks list yet
+    mission_dict = mission_data.model_dump(exclude={"tasks"})
+    new_mission = Mission.model_validate(mission_dict)
+    
+    session.add(new_mission)
+    session.commit()
+    session.refresh(new_mission) # Refresh to get the auto-generated ID
+
+    # 2. Now, create each Task and link it to the new mission
+    for task_suggestion in mission_data.tasks:
+        new_task = Task(
+            title=task_suggestion.title,
+            description=task_suggestion.description,
+            points=task_suggestion.points,
+            missionId=new_mission.id  # Link to the mission we just created
+        )
+        session.add(new_task)
+    
+    # 3. Commit all the new tasks to the database
+    session.commit()
+    session.refresh(new_mission) # Refresh again to load the new tasks relationship
+
+    return new_mission
 
 # Task Endpoints
 @app.post("/missions/{mission_id}/tasks/", response_model=TaskRead, status_code=status.HTTP_201_CREATED, tags=["Tasks"])
