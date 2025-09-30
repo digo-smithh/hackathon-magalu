@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
-import { AddMissionScreen } from './components/AddMissionScreen';
+import { AddMissionScreen, TaskStep } from './components/AddMissionScreen';
 import { Toaster } from './components/ui/sonner';
 import { GameList, Task } from './types/task';
 import { createMissionWithTasks } from './API/missionService';
 import { AuthProvider, useAuth } from './auth/AuthProvider';
 import { LoginScreen } from './components/LoginScreen';
+import { AICreateMissionScreen } from './components/AICreateMissionScreen';
 
-type Screen = 'home' | 'game' | 'add-mission' | 'sign-up' | 'login';
+type Screen = 'home' | 'game' | 'add-mission' | 'sign-up' | 'login' | 'ai-create-mission';
 
 function AppContent() {
   const { user } = useAuth();
@@ -42,22 +43,18 @@ function AppContent() {
     setCurrentScreen('add-mission');
   };
 
-  const handleSaveMission = (mission: {
+  const handleCreateAIMission = () => {
+    setCurrentScreen('ai-create-mission');
+  };
+
+  const handleSaveMission = (missionData: {
     name: string;
     description: string;
-    createdBy?: string;
-    tasks: Array<{
-      title: string;
-      description: string;
-      deadline: string;
-      completed: boolean;
-      points: number;
-      isFinal: boolean;
-      createdAt: string;
-      bossType: string;
-    }>;
+    steps: TaskStep[]; // Recebe os 'steps' do formulário
   }) => {
-    const tasks: Task[] = mission.tasks.map((step) => ({
+    // Converte 'steps' do formulário para o formato 'Task' da API
+    const tasks: Task[] = missionData.steps.map((step) => ({
+      id: step.id,
       title: step.title,
       description: step.description,
       deadline: step.deadline,
@@ -66,18 +63,24 @@ function AppContent() {
       isFinal: false,
       createdAt: new Date().toISOString(),
       bossType: step.bossType,
+      bossName: step.bossName,
     }));
 
+    // Lógica para a tarefa final
     if (tasks.length > 0) {
       tasks[tasks.length - 1].isFinal = true;
       tasks[tasks.length - 1].points *= 2;
     }
     
-    mission = {
-      ...mission,
-      createdBy: user ? user.id : '',
-    } 
-    createMissionWithTasks(mission);
+    // Monta o objeto final que será enviado para a API
+    const finalMissionPayload = {
+      name: missionData.name,
+      description: missionData.description,
+      createdBy: user ? user.id : '', // Adiciona o ID do usuário aqui
+      tasks: tasks, // Envia o array de 'tasks' formatado
+    };
+
+    createMissionWithTasks(finalMissionPayload);
 
     alert('Missão criada com sucesso!');
 
@@ -112,7 +115,8 @@ function AppContent() {
             gameLists={gameLists}
             onSelectList={handleSelectList}
             onCreateMission={handleCreateMission}
-            onRefreshLists={() => setRefreshKey(prev => prev + 1)}
+            onCreateAIMission={handleCreateAIMission}
+            onRefresh={() => setRefreshKey(prev => prev + 1)}
           />
         )}
         
@@ -130,6 +134,13 @@ function AppContent() {
             onSaveMission={handleSaveMission}
           />
         )}
+
+       {currentScreen === 'ai-create-mission' && (
+          <AICreateMissionScreen
+            onBack={handleBackToHome}
+            onSaveMission={handleSaveMission}
+          />
+        )}
       </div>
       <Toaster position="top-center" />
     </>

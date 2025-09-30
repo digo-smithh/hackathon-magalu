@@ -9,7 +9,7 @@ import { toast } from 'sonner@2.0.3';
 import { BossType } from '../types/task';
 import { BikiniBottomBackground } from './BikiniBottomBackground';
 
-interface TaskStep {
+export interface TaskStep {
   id: string;
   title: string;
   description: string;
@@ -19,13 +19,13 @@ interface TaskStep {
   bossName: string;
 }
 
+
 interface AddMissionScreenProps {
   onBack: () => void;
   onSaveMission: (mission: {
     name: string;
     description: string;
-    createdBy: '';
-    steps: TaskStep[];
+    steps: TaskStep[]; // Ele envia um array de 'steps'
   }) => void;
 }
 
@@ -71,7 +71,11 @@ export function AddMissionScreen({ onBack, onSaveMission }: AddMissionScreenProp
     if (!missionName.trim()) { toast.error('Adicione um nome para a missao!'); return; }
     if (steps.length === 0) { toast.error('Adicione pelo menos uma etapa!'); return; }
 
-    onSaveMission({ name: missionName, description: missionDescription, steps });
+    onSaveMission({ 
+        name: missionName, 
+        description: missionDescription, 
+        steps 
+    });
 
     alert('Missao criada com sucesso! 🌟');
   };
