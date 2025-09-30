@@ -149,7 +149,8 @@ def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCr
             isFinal=task_data.isFinal,
             bossType=task_data.bossType,
             bossName=task_data.bossName,
-            missionId=new_mission.id,
+            completed=task.data.completed,
+            createdAt=task.data.createdAt,
         )
         session.add(new_task)
     
