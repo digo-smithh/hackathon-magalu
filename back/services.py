@@ -1,6 +1,7 @@
 # /services.py
 
 import json
+from datetime import datetime, timezone
 import google.generativeai as genai
 from fastapi import HTTPException, status
 from sqlmodel import Session, select, or_
@@ -92,7 +93,12 @@ def create_user(session: Session, user_in: UserCreate) -> User:
     user_dict = user_in.model_dump()
     user_dict["password"] = get_password_hash(user_in.password)
     
-    db_user = User(**user_dict)
+    # --- FIX ---
+    # Manually set the updatedAt field to ensure it's not null
+    now = datetime.now(timezone.utc)
+    db_user = User(**user_dict, updatedAt=now)
+    # --- END FIX ---
+    
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
@@ -132,7 +138,8 @@ def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCr
     mission_dict = mission_data.model_dump(exclude={"tasks"})
     
     # Use Mission(**mission_dict) to ensure default values are triggered
-    new_mission = Mission(**mission_dict)
+    now = datetime.now(timezone.utc)
+    new_mission = Mission(**mission_dict, updatedAt=now)
     
     session.add(new_mission)
     session.commit()
@@ -143,7 +150,8 @@ def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCr
             title=task_suggestion.title,
             description=task_suggestion.description,
             points=task_suggestion.points,
-            missionId=new_mission.id
+            missionId=new_mission.id,
+            updatedAt=now
         )
         session.add(new_task)
     
