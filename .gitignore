@@ -14,3 +14,7 @@ terraform.tfstate.backup
 
 # Crash log files
 crash.log
+
+venv/*
+venv
+.venv
