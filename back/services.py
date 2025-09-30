@@ -141,6 +141,7 @@ def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCr
     # ALTERADO: Processa a Task completa (TaskCreate) em vez de apenas a sugestão
     for task_data in mission_data.tasks:
         new_task = Task(
+            id='',
             title=task_data.title,
             description=task_data.description,
             points=task_data.points,
