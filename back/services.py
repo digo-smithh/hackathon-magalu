@@ -19,7 +19,7 @@ SYSTEM_PROMPT = """
 You are 'QuestMaster', a friendly and expert project planner designed specifically to help students succeed. Your mission is to take a student's project goal and break it down into a series of clear, manageable, and motivating tasks presented as a quest.
 
 Your tone should be encouraging, clear, and slightly gamified to make projects feel less like a chore and more like an adventure.
-Always answer in the same language as the user's request.
+
 ## Your Process
 When you receive a user's request, you must follow this logical progression to structure the project plan:
 1.  **Phase 1: Planning & Research:** Start with foundational tasks like understanding requirements, brainstorming, researching, and creating an outline. These are crucial first steps.
@@ -93,7 +93,7 @@ def create_user(session: Session, user_in: UserCreate) -> User:
     user_dict = user_in.model_dump()
     user_dict["password"] = get_password_hash(user_in.password)
     
-    db_user = User(**user_dict, updatedAt=datetime.now(timezone.utc))
+    db_user = User.model_validate(user_dict)
     
     session.add(db_user)
     session.commit()
@@ -113,10 +113,11 @@ def authenticate_user(session: Session, username: str, password: str) -> User | 
 # --- AI Planner Service ---
 
 def plan_mission_with_ai(prompt: str) -> list:
+    """Generates a list of tasks for a mission using the AI."""
     if not settings.GOOGLE_API_KEY:
         raise HTTPException(status_code=500, detail="Google API Key is not configured.")
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         full_prompt = f"{SYSTEM_PROMPT}\nUser's Request: \"{prompt}\"\nYour Output:"
         response = model.generate_content(full_prompt)
         cleaned_response = response.text.strip().replace("```json", "").replace("```", "").strip()
@@ -129,10 +130,10 @@ def plan_mission_with_ai(prompt: str) -> list:
 # --- Mission Services ---
 
 def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCreate) -> Mission:
+    """Creates a new mission and its associated tasks in a single transaction."""
     mission_dict = mission_data.model_dump(exclude={"tasks"})
     
-    now = datetime.now(timezone.utc)
-    new_mission = Mission(**mission_dict, updatedAt=now)
+    new_mission = Mission.model_validate(mission_dict)
     
     session.add(new_mission)
     session.commit()
@@ -144,7 +145,6 @@ def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCr
             description=task_suggestion.description,
             points=task_suggestion.points,
             missionId=new_mission.id,
-            updatedAt=now
         )
         session.add(new_task)
     

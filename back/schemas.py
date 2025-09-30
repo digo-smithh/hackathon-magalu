@@ -22,12 +22,17 @@ class TaskBase(SQLModel):
     title: str
     description: str | None = None
     points: int
+    deadline: datetime | None = None
+    completed: bool = False
+    isFinal: bool = False
+    bossType: str | None = None
 
 class TaskCreate(TaskBase):
     pass
 
 class TaskRead(TaskBase):
     id: uuid.UUID
+    createdAt: datetime
 
 # --- Mission Schemas ---
 class MissionBase(SQLModel):
@@ -78,7 +83,6 @@ class TokenData(SQLModel):
     """Schema for the data encoded within the JWT."""
     username: str | None = None
 
-# --- ADD THIS CLASS ---
 class LoginResponse(SQLModel):
     """Schema for the login response, including the token and user info."""
     access_token: str

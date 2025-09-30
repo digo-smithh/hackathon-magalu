@@ -35,6 +35,11 @@ class Task(SQLModel, table=True):
     description: Optional[str] = None
     points: int = Field(gt=0)
     missionId: uuid.UUID = Field(foreign_key="mission.id")
+    deadline: Optional[datetime] = None
+    completed: bool = Field(default=False)
+    isFinal: bool = Field(default=False)
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    bossType: Optional[str] = None
     
     mission: Mission = Relationship(back_populates="tasks")
 
