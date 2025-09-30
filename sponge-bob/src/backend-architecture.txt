@@ -1,0 +1,343 @@
+# QuestTasks - Arquitetura do Backend
+
+## Visão Geral
+O backend do QuestTasks é responsável por gerenciar missões, usuários, competição em tempo real e gamificação. A arquitetura é baseada em uma API RESTful com suporte a WebSockets para atualizações em tempo real.
+
+## Tecnologias Sugeridas
+- **Framework**: Node.js com Express.js ou NestJS
+- **Banco de Dados**: PostgreSQL (dados estruturados) + Redis (cache e tempo real)
+- **ORM**: Prisma ou TypeORM
+- **Autenticação**: JWT (JSON Web Tokens) + OAuth2 (Google, Facebook)
+- **Tempo Real**: Socket.io ou WebSockets nativos
+- **Armazenamento de Arquivos**: AWS S3 ou Cloudinary (para avatares)
+- **Deploy**: Docker + Kubernetes ou Vercel/Railway
+
+## Entidades do Sistema
+
+### 1. User (Usuário)
+```
+User {
+  id: UUID (PK)
+  email: String (unique)
+  username: String (unique)
+  password: String (hashed)
+  avatar: String (URL)
+  createdAt: DateTime
+  updatedAt: DateTime
+  isActive: Boolean
+  
+  // Relacionamentos
+  createdMissions: Mission[]
+  participations: MissionParticipant[]
+  completedTasks: TaskCompletion[]
+  friendships: Friendship[]
+}
+```
+
+### 2. Mission (Missão/Lista de Tarefas)
+```
+Mission {
+  id: UUID (PK)
+  name: String
+  description: String
+  createdById: UUID (FK -> User)
+  createdAt: DateTime
+  updatedAt: DateTime
+  startDate: DateTime
+  endDate: DateTime (opcional)
+  isActive: Boolean
+  status: Enum ['active', 'completed', 'archived']
+  
+  // Relacionamentos
+  createdBy: User
+  tasks: Task[]
+  participants: MissionParticipant[]
+}
+```
+
+### 3. Task (Tarefa/Etapa)
+```
+Task {
+  id: UUID (PK)
+  missionId: UUID (FK -> Mission)
+  title: String
+  description: String
+  points: Integer
+  deadline: DateTime
+  order: Integer (posição na sequência)
+  isFinal: Boolean (tarefa final vale pontos duplos)
+  createdAt: DateTime
+  updatedAt: DateTime
+  
+  // Relacionamentos
+  mission: Mission
+  completions: TaskCompletion[]
+}
+```
+
+### 4. MissionParticipant (Participante da Missão)
+```
+MissionParticipant {
+  id: UUID (PK)
+  missionId: UUID (FK -> Mission)
+  userId: UUID (FK -> User)
+  joinedAt: DateTime
+  totalPoints: Integer (calculado)
+  completedTasksCount: Integer (calculado)
+  currentPosition: Integer (posição no mapa/ranking)
+  status: Enum ['active', 'completed', 'abandoned']
+  
+  // Relacionamentos
+  mission: Mission
+  user: User
+  taskCompletions: TaskCompletion[]
+}
+```
+
+### 5. TaskCompletion (Conclusão de Tarefa)
+```
+TaskCompletion {
+  id: UUID (PK)
+  taskId: UUID (FK -> Task)
+  participantId: UUID (FK -> MissionParticipant)
+  userId: UUID (FK -> User)
+  completedAt: DateTime
+  pointsEarned: Integer
+  isLate: Boolean (se completou após deadline)
+  
+  // Relacionamentos
+  task: Task
+  participant: MissionParticipant
+  user: User
+}
+```
+
+### 6. Friendship (Amizade)
+```
+Friendship {
+  id: UUID (PK)
+  userId1: UUID (FK -> User)
+  userId2: UUID (FK -> User)
+  status: Enum ['pending', 'accepted', 'rejected']
+  createdAt: DateTime
+  acceptedAt: DateTime (opcional)
+  
+  // Relacionamentos
+  user1: User
+  user2: User
+}
+```
+
+### 7. Notification (Notificação)
+```
+Notification {
+  id: UUID (PK)
+  userId: UUID (FK -> User)
+  type: Enum ['friend_request', 'mission_invite', 'task_completed', 'achievement']
+  title: String
+  message: String
+  data: JSON (dados adicionais específicos do tipo)
+  isRead: Boolean
+  createdAt: DateTime
+  
+  // Relacionamentos
+  user: User
+}
+```
+
+### 8. Achievement (Conquistas/Badges)
+```
+Achievement {
+  id: UUID (PK)
+  name: String
+  description: String
+  icon: String (URL)
+  criteria: JSON (critérios para desbloquear)
+  points: Integer
+  rarity: Enum ['common', 'rare', 'epic', 'legendary']
+  
+  // Relacionamentos
+  unlockedBy: UserAchievement[]
+}
+```
+
+### 9. UserAchievement (Conquista do Usuário)
+```
+UserAchievement {
+  id: UUID (PK)
+  userId: UUID (FK -> User)
+  achievementId: UUID (FK -> Achievement)
+  unlockedAt: DateTime
+  
+  // Relacionamentos
+  user: User
+  achievement: Achievement
+}
+```
+
+## Principais Endpoints da API
+
+### Autenticação
+- POST /auth/register - Criar nova conta
+- POST /auth/login - Login com email/senha
+- POST /auth/google - Login com Google OAuth
+- POST /auth/refresh - Renovar token JWT
+- POST /auth/logout - Logout
+
+### Usuários
+- GET /users/me - Obter dados do usuário logado
+- PUT /users/me - Atualizar perfil
+- GET /users/:id - Obter perfil público de usuário
+- POST /users/me/avatar - Upload de avatar
+
+### Amigos
+- GET /friends - Listar amigos
+- POST /friends/request - Enviar solicitação de amizade
+- PUT /friends/:id/accept - Aceitar solicitação
+- PUT /friends/:id/reject - Rejeitar solicitação
+- DELETE /friends/:id - Remover amigo
+
+### Missões
+- GET /missions - Listar missões do usuário
+- POST /missions - Criar nova missão
+- GET /missions/:id - Obter detalhes de missão
+- PUT /missions/:id - Atualizar missão
+- DELETE /missions/:id - Deletar missão
+- POST /missions/:id/participants - Adicionar participante
+- DELETE /missions/:id/participants/:userId - Remover participante
+
+### Tarefas
+- GET /missions/:missionId/tasks - Listar tarefas da missão
+- POST /missions/:missionId/tasks - Criar nova tarefa
+- PUT /tasks/:id - Atualizar tarefa
+- DELETE /tasks/:id - Deletar tarefa
+- POST /tasks/:id/complete - Marcar tarefa como completa
+- DELETE /tasks/:id/complete - Desmarcar tarefa
+
+### Ranking e Estatísticas
+- GET /missions/:id/leaderboard - Ranking da missão
+- GET /users/:id/stats - Estatísticas do usuário
+- GET /global/leaderboard - Ranking global
+
+### Notificações
+- GET /notifications - Listar notificações
+- PUT /notifications/:id/read - Marcar como lida
+- PUT /notifications/read-all - Marcar todas como lidas
+
+### Conquistas
+- GET /achievements - Listar todas conquistas
+- GET /users/:id/achievements - Conquistas do usuário
+
+## WebSocket Events (Tempo Real)
+
+### Client -> Server
+- join_mission: Entrar em sala de missão específica
+- leave_mission: Sair da sala de missão
+- task_update: Atualizar tarefa
+
+### Server -> Client
+- task_completed: Alguém completou uma tarefa
+- participant_joined: Novo participante entrou
+- participant_left: Participante saiu
+- leaderboard_update: Ranking foi atualizado
+- mission_completed: Missão foi concluída
+- achievement_unlocked: Nova conquista desbloqueada
+
+## Regras de Negócio
+
+### Pontuação
+1. Cada tarefa tem pontos base definidos pelo criador
+2. Tarefa marcada como "final" vale pontos em dobro
+3. Completar tarefa após deadline reduz pontos em 50%
+4. Completar todas tarefas antes do prazo dá bônus de 20%
+5. Primeiro a completar cada tarefa ganha bônus de 10%
+
+### Competição
+1. Ranking calculado por: total de pontos + velocidade de conclusão
+2. Empates são quebrados pela data/hora de conclusão da última tarefa
+3. Ranking atualiza em tempo real via WebSocket
+
+### Missões
+1. Criador pode adicionar/remover participantes
+2. Participante pode sair da missão a qualquer momento
+3. Missão pode ser arquivada mas não deletada (histórico)
+4. Tarefas não podem ser modificadas após alguém completá-las
+
+### Amizades
+1. Somente amigos podem ser convidados para missões privadas
+2. Notificação é enviada para ambos usuários em nova amizade
+
+### Conquistas (Exemplos)
+- "Primeira Vitória": Completar primeira missão
+- "Velocista": Completar 5 missões em menos de 24h
+- "Maratonista": Completar 100 tarefas
+- "Competidor": Participar de 10 missões
+- "Líder": Criar 5 missões com 3+ participantes
+- "Pontual": Completar 20 tarefas antes do deadline
+- "Social": Adicionar 10 amigos
+
+## Segurança
+
+### Autenticação e Autorização
+- Tokens JWT com expiração de 1 hora
+- Refresh tokens com expiração de 7 dias
+- Rate limiting: 100 requests/minuto por IP
+- CORS configurado para domínios permitidos
+
+### Proteção de Dados
+- Senhas hasheadas com bcrypt (12 rounds)
+- Validação de input em todos endpoints
+- Sanitização de dados antes de salvar
+- HTTPS obrigatório em produção
+
+### Permissões
+- Usuário só pode editar suas próprias missões
+- Usuário só pode completar tarefas de missões que participa
+- Admin pode moderar conteúdo inapropriado
+
+## Cache e Performance
+
+### Redis Cache
+- Ranking de missões: TTL 5 minutos
+- Perfis de usuários: TTL 15 minutos
+- Conquistas: TTL 1 hora
+- Contadores de estatísticas: TTL 10 minutos
+
+### Otimizações
+- Índices no banco para queries frequentes (userId, missionId, status)
+- Paginação em listas longas (20 itens por página)
+- Lazy loading de relacionamentos
+- Agregação de pontos calculada em background job
+
+## Monitoramento e Logs
+
+### Métricas
+- Taxa de conclusão de tarefas
+- Tempo médio de conclusão de missões
+- Usuários ativos diários/mensais
+- Taxa de retenção
+- Erros e exceções
+
+### Logs
+- Ações de usuário (login, criação de missão, etc)
+- Erros de API
+- Performance de queries lentas
+- Tentativas de acesso não autorizado
+
+## Escalabilidade Futura
+
+### Horizontal Scaling
+- API stateless para fácil replicação
+- Redis para sessões compartilhadas
+- Load balancer para distribuir tráfego
+- Database read replicas para queries pesadas
+
+### Features Futuras
+- Sistema de níveis e experiência (XP)
+- Loja de customizações (avatares, temas)
+- Missões públicas e desafios diários
+- Integração com calendário (Google Calendar)
+- Sistema de recompensas e prêmios
+- Chat em grupo por missão
+- Modo competitivo vs colaborativo
+- Analytics e insights de produtividade
