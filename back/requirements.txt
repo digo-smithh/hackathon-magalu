@@ -11,3 +11,12 @@ sqlmodel
 
 # Google Generative AI
 google-generativeai
+
+# Carregamento de variáveis de ambiente do arquivo .env
+python-dotenv
+
+# Biblioteca para hashing de senhas
+passlib[bcrypt]
+
+# JWT token management
+python-jose[cryptography]

@@ -12,7 +12,17 @@ from fastapi import Depends, FastAPI, HTTPException, status
 from sqlmodel import (Field, Relationship, Session, SQLModel, create_engine,
                       select)
 from sqlmodel import or_
+from passlib.context import CryptContext
 
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
 
 # --- 1. AI Planner Service ---
 
@@ -215,13 +225,19 @@ def plan_mission_with_ai(request: AIPlannerRequest):
     return suggested_tasks
 
 # User Endpoints
-@app.post("/users/", response_model=UserRead, status_code=status.HTTP_201_CREATED, tags=["Users"])
+@app.post("/users/", response_model=UserRead, status_code=status.HTTP_2_CREATED, tags=["Users"])
 def create_user(user_in: UserCreate, session: Session = Depends(get_session)):
-    db_user = User.model_validate(user_in)
+    # Hash the password before creating the user object
+    hashed_password = get_password_hash(user_in.password)
+    user_dict = user_in.model_dump()
+    user_dict["password"] = hashed_password # Replace plain password with hash
+    
+    db_user = User.model_validate(user_dict)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
     return db_user
+
 
 @app.get("/users/", response_model=List[UserRead], tags=["Users"])
 def list_users(session: Session = Depends(get_session)):
