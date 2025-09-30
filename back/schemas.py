@@ -67,3 +67,13 @@ class MissionParticipantReadWithUser(MissionParticipantRead):
 
 class MissionReadWithParticipants(MissionRead):
     participants: List[MissionParticipantReadWithUser] = []
+    
+    
+class Token(SQLModel):
+    """Schema for the JWT access token response."""
+    access_token: str
+    token_type: str
+
+class TokenData(SQLModel):
+    """Schema for the data encoded within the JWT."""
+    username: str | None = None
