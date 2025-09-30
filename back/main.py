@@ -108,7 +108,7 @@ class Mission(MissionBase, table=True):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     updatedAt: datetime = Field(default_factory=datetime.utcnow)
-
+    isActive: bool = True
     createdById: uuid.UUID = Field(foreign_key="user.id")
     createdBy: User = Relationship(back_populates="createdMissions")
     
