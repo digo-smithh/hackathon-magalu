@@ -9,6 +9,7 @@ from sqlmodel import SQLModel
 class UserBase(SQLModel):
     email: str
     username: str
+    name: str # NOVO
     avatar: str | None = None
 
 class UserCreate(UserBase):
@@ -26,6 +27,7 @@ class TaskBase(SQLModel):
     completed: bool = False
     isFinal: bool = False
     bossType: str | None = None
+    bossName: str | None = None # NOVO
 
 class TaskCreate(TaskBase):
     pass
@@ -55,9 +57,14 @@ class TaskSuggestion(SQLModel):
     description: str
     points: int
 
+# --- Schemas para Criação de Missão com Tarefas (Payload do Frontend) ---
 class MissionWithTasksCreate(MissionCreate):
-    tasks: List[TaskSuggestion]
+    tasks: List[TaskCreate] # ALTERADO: Usa TaskCreate para incluir todos os campos
 
+# NOVO: Schema para lidar com o payload aninhado do frontend
+class MissionCreationRequest(SQLModel):
+    mission: MissionWithTasksCreate
+    
 # --- Participant Schemas ---
 class ParticipantCreate(SQLModel):
     user_id: uuid.UUID
@@ -72,19 +79,17 @@ class MissionParticipantReadWithUser(MissionParticipantRead):
 
 class MissionReadWithParticipants(MissionRead):
     participants: List[MissionParticipantReadWithUser] = []
-    
+    tasks: List[TaskRead] = [] # NOVO: Adiciona tarefas à resposta
+
 # --- Token and Login Schemas ---
 class Token(SQLModel):
-    """Schema for the JWT access token response."""
     access_token: str
     token_type: str
 
 class TokenData(SQLModel):
-    """Schema for the data encoded within the JWT."""
     username: str | None = None
 
 class LoginResponse(SQLModel):
-    """Schema for the login response, including the token and user info."""
     access_token: str
     token_type: str
     user: UserRead

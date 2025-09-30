@@ -19,7 +19,7 @@ SYSTEM_PROMPT = """
 You are 'QuestMaster', a friendly and expert project planner designed specifically to help students succeed. Your mission is to take a student's project goal and break it down into a series of clear, manageable, and motivating tasks presented as a quest.
 
 Your tone should be encouraging, clear, and slightly gamified to make projects feel less like a chore and more like an adventure.
-
+Always answer in the same language as the user's request.
 ## Your Process
 When you receive a user's request, you must follow this logical progression to structure the project plan:
 1.  **Phase 1: Planning & Research:** Start with foundational tasks like understanding requirements, brainstorming, researching, and creating an outline. These are crucial first steps.
@@ -113,11 +113,10 @@ def authenticate_user(session: Session, username: str, password: str) -> User | 
 # --- AI Planner Service ---
 
 def plan_mission_with_ai(prompt: str) -> list:
-    """Generates a list of tasks for a mission using the AI."""
     if not settings.GOOGLE_API_KEY:
         raise HTTPException(status_code=500, detail="Google API Key is not configured.")
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         full_prompt = f"{SYSTEM_PROMPT}\nUser's Request: \"{prompt}\"\nYour Output:"
         response = model.generate_content(full_prompt)
         cleaned_response = response.text.strip().replace("```json", "").replace("```", "").strip()
@@ -139,12 +138,19 @@ def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCr
     session.commit()
     session.refresh(new_mission)
 
-    for task_suggestion in mission_data.tasks:
+    # ALTERADO: Processa a Task completa (TaskCreate) em vez de apenas a sugestão
+    for task_data in mission_data.tasks:
         new_task = Task(
-            title=task_suggestion.title,
-            description=task_suggestion.description,
-            points=task_suggestion.points,
-            missionId=new_mission.id,
+            id='',
+            title=task_data.title,
+            description=task_data.description,
+            points=task_data.points,
+            deadline=task_data.deadline,
+            isFinal=task_data.isFinal,
+            bossType=task_data.bossType,
+            bossName=task_data.bossName,
+            completed=task.data.completed,
+            createdAt=task.data.createdAt,
         )
         session.add(new_task)
     
