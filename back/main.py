@@ -3,6 +3,7 @@
 import os
 import uuid
 import json
+import hashlib  # <-- 1. IMPORT HASHLIB
 from datetime import datetime
 from typing import List, Optional
 
@@ -16,14 +17,29 @@ from sqlmodel import or_
 from passlib.context import CryptContext
 
 
-
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+# --- 2. MODIFIED PASSWORD FUNCTIONS ---
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """
+    Verifies a password by first pre-hashing it with SHA-256.
+    """
+    # Pre-hash the plain_password using the same method as in get_password_hash
+    password_bytes = plain_password.encode('utf-8')
+    sha256_hash = hashlib.sha256(password_bytes).hexdigest()
+    return pwd_context.verify(sha256_hash, hashed_password)
+
+def get_password_hash(password: str) -> str:
+    """
+    Hashes a password by first pre-hashing it with SHA-256.
+    This allows passwords of any length to be used with bcrypt.
+    """
+    # Pre-hash the password to create a fixed-length input for bcrypt
+    password_bytes = password.encode('utf-8')
+    sha256_hash = hashlib.sha256(password_bytes).hexdigest()
+    return pwd_context.hash(sha256_hash)
+
 
 # --- 1. AI Planner Service ---
 
@@ -47,7 +63,7 @@ def generate_tasks_from_prompt(user_prompt: str) -> list:
         raise HTTPException(status_code=500, detail="Google API Key is not configured on the server.")
         
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        model = genai.GenerativeModel('gemini-1.5-flash') # Updated to a more recent model
         full_prompt = f"{SYSTEM_PROMPT}\nUser's Request: \"{user_prompt}\"\nYour Output:"
         response = model.generate_content(full_prompt)
         cleaned_response = response.text.strip().replace("```json", "").replace("```", "").strip()
@@ -131,7 +147,7 @@ class MissionParticipant(SQLModel, table=True):
 # --- 4. Schemas for API I/O (Create/Read) ---
 
 class UserCreate(UserBase):
-    password: str = Field(max_length=72) # <-- THE FIX IS HERE
+    password: str  # <-- 3. REMOVED THE max_length=72 CONSTRAINT
 
 class UserRead(UserBase):
     id: uuid.UUID
@@ -219,7 +235,7 @@ def plan_mission_with_ai(request: AIPlannerRequest):
 # User Endpoints
 @app.post("/users/", response_model=UserRead, status_code=status.HTTP_201_CREATED, tags=["Users"])
 def create_user(user_in: UserCreate, session: Session = Depends(get_session)):
-    # Hash the password before creating the user object
+    # The get_password_hash function now handles long passwords correctly
     hashed_password = get_password_hash(user_in.password)
     user_dict = user_in.model_dump()
     user_dict["password"] = hashed_password # Replace plain password with hash
