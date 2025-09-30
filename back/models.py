@@ -1,7 +1,7 @@
 # /models.py
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -11,7 +11,9 @@ class User(SQLModel, table=True):
     username: str = Field(unique=True, index=True)
     password: str
     avatar: Optional[str] = None
-    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    isActive: bool = Field(default=True)
     
     createdMissions: List["Mission"] = Relationship(back_populates="createdBy")
     participations: List["MissionParticipant"] = Relationship(back_populates="user")
