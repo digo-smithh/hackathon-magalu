@@ -8,13 +8,14 @@ import { getMissionsByUser } from '../API/userService.ts';
 import { useAuth } from '../auth/AuthProvider.tsx';
 
 interface HomeScreenProps {
+  gameLists: GameList[];
   onSelectList: (list: GameList) => void;
   onCreateMission: () => void;
-  gameLists?: GameList[];
-  onRefreshLists?: () => void;
+  onCreateAIMission?: () => void;
+  onRefresh: () => void;
 }
 
-export function HomeScreen({ onSelectList, onCreateMission }: HomeScreenProps) {
+export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateAIMission, onRefresh }: HomeScreenProps) {
   const { user } = useAuth();
   const [missions, setMissions] = useState<GameList[]>([]);
 
@@ -84,12 +85,23 @@ export function HomeScreen({ onSelectList, onCreateMission }: HomeScreenProps) {
           <Button 
             size="lg"
             onClick={onCreateMission}
-            className="bg-gradient-to-r from-pink-400 to-purple-400 text-white hover:from-pink-600 hover:to-purple-600 border-blue-600 shadow-2xl px-8 py-6 rounded-lg transform hover:scale-105 transition-all duration-200"
+            className="bg-pink-500 text-white hover:bg-pink-600 shadow-2xl border-3 border-yellow-400 px-8 py-6 rounded-xl transform hover:scale-105 transition-all duration-200"
           >
             <Plus size={20} className="mr-3" />
             Criar Nova Missão
           </Button>
-        </div>
+
+          {onCreateAIMission && (
+            <Button 
+              size="lg"
+              onClick={onCreateAIMission}
+              className="bg-purple-500 text-white hover:bg-purple-600 shadow-2xl border-3 border-yellow-400 px-8 py-6 rounded-xl transform hover:scale-105 transition-all duration-200"
+            >
+              <Sparkles size={20} className="mr-3" />
+              Criar com IA
+            </Button>
+          )}
+        </div>
 
         {/* Game Lists Grid */}
         {missions.length > 0 && (

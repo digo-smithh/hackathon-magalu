@@ -95,11 +95,11 @@ export function LoginScreen({ onLoginSuccess, onNavigateToSignUp }: LoginScreenP
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Username</Label>
               <Input
                 id="email"
                 type="text"
-                placeholder="bob@fendadobiquini.com"
+                placeholder="bob.esponja"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border-2 focus:border-[#FFE135]"
