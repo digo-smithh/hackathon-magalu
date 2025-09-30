@@ -3,7 +3,7 @@
 import os
 import uuid
 import json
-import hashlib  # <-- 1. IMPORT HASHLIB
+# import hashlib # <-- No longer needed
 from datetime import datetime
 from typing import List, Optional
 
@@ -16,32 +16,23 @@ from sqlmodel import (Field, Relationship, Session, SQLModel, create_engine,
 from sqlmodel import or_
 from passlib.context import CryptContext
 
+# --- 1. SWITCH TO ARGON2 ---
+# Argon2 is the modern, recommended standard. It's more secure and has no password length limits.
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# --- 2. MODIFIED PASSWORD FUNCTIONS ---
+# --- 2. SIMPLIFY PASSWORD FUNCTIONS ---
+# With Argon2, we no longer need to pre-hash the password.
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """
-    Verifies a password by first pre-hashing it with SHA-256.
-    """
-    # Pre-hash the plain_password using the same method as in get_password_hash
-    password_bytes = plain_password.encode('utf-8')
-    sha256_hash = hashlib.sha256(password_bytes).hexdigest()
-    return pwd_context.verify(sha256_hash, hashed_password)
+    """Verifies a password against an Argon2 hash."""
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
-    """
-    Hashes a password by first pre-hashing it with SHA-256.
-    This allows passwords of any length to be used with bcrypt.
-    """
-    # Pre-hash the password to create a fixed-length input for bcrypt
-    password_bytes = password.encode('utf-8')
-    sha256_hash = hashlib.sha256(password_bytes).hexdigest()
-    return pwd_context.hash(sha256_hash)
+    """Hashes a password using Argon2."""
+    return pwd_context.hash(password)
 
 
-# --- 1. AI Planner Service ---
+# --- AI Planner Service ---
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -63,7 +54,7 @@ def generate_tasks_from_prompt(user_prompt: str) -> list:
         raise HTTPException(status_code=500, detail="Google API Key is not configured on the server.")
         
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash') # Updated to a more recent model
+        model = genai.GenerativeModel('gemini-1.5-flash')
         full_prompt = f"{SYSTEM_PROMPT}\nUser's Request: \"{user_prompt}\"\nYour Output:"
         response = model.generate_content(full_prompt)
         cleaned_response = response.text.strip().replace("```json", "").replace("```", "").strip()
@@ -78,7 +69,7 @@ def generate_tasks_from_prompt(user_prompt: str) -> list:
         print(f"An error occurred with the Gemini API: {e}")
         raise HTTPException(status_code=503, detail="The AI service is currently unavailable.")
 
-# --- 2. Database Configuration ---
+# --- Database Configuration ---
 
 DATABASE_FILE = "questtasks.db"
 engine = create_engine(f"sqlite:///{DATABASE_FILE}", echo=False, connect_args={"check_same_thread": False})
@@ -86,7 +77,7 @@ engine = create_engine(f"sqlite:///{DATABASE_FILE}", echo=False, connect_args={"
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
-# --- 3. Model Definitions ---
+# --- Model Definitions ---
 
 class UserBase(SQLModel):
     email: str = Field(unique=True, index=True)
@@ -144,10 +135,10 @@ class MissionParticipant(SQLModel, table=True):
     mission: "Mission" = Relationship(back_populates="participants")
     user: "User" = Relationship(back_populates="participations")
 
-# --- 4. Schemas for API I/O (Create/Read) ---
+# --- Schemas for API I/O (Create/Read) ---
 
 class UserCreate(UserBase):
-    password: str  # <-- 3. REMOVED THE max_length=72 CONSTRAINT
+    password: str
 
 class UserRead(UserBase):
     id: uuid.UUID
@@ -191,7 +182,7 @@ class TaskSuggestion(SQLModel):
 
 class MissionWithTasksCreate(MissionCreate):
     tasks: List[TaskSuggestion]
-# --- 5. FastAPI App and DB Session ---
+# --- FastAPI App and DB Session ---
 
 app = FastAPI(title="QuestTasks API")
 
@@ -218,7 +209,7 @@ def get_session():
     with Session(engine) as session:
         yield session
 
-# --- 6. API Endpoints ---
+# --- API Endpoints ---
 
 @app.get("/", tags=["Root"])
 def read_root():
@@ -235,7 +226,7 @@ def plan_mission_with_ai(request: AIPlannerRequest):
 # User Endpoints
 @app.post("/users/", response_model=UserRead, status_code=status.HTTP_201_CREATED, tags=["Users"])
 def create_user(user_in: UserCreate, session: Session = Depends(get_session)):
-    # The get_password_hash function now handles long passwords correctly
+    # The simplified get_password_hash function handles everything directly.
     hashed_password = get_password_hash(user_in.password)
     user_dict = user_in.model_dump()
     user_dict["password"] = hashed_password # Replace plain password with hash
@@ -288,6 +279,8 @@ def get_user_missions(user_id: uuid.UUID, session: Session = Depends(get_session
     
     missions = session.exec(statement).all()
     return missions
+
+# (The rest of your endpoints remain unchanged)
 
 # Mission Endpoints
 @app.post("/missions/", response_model=MissionRead, status_code=status.HTTP_201_CREATED, tags=["Missions"])

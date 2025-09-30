@@ -16,7 +16,7 @@ google-generativeai
 python-dotenv
 
 # Biblioteca para hashing de senhas
-passlib[bcrypt]
+argon2-cffi
 
 # JWT token management
 python-jose[cryptography]
