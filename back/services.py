@@ -24,7 +24,7 @@ def create_user(session: Session, user_in: UserCreate) -> User:
     user_dict = user_in.model_dump()
     user_dict["password"] = hashed_password
     
-    db_user = User.model_validate(user_dict)
+    db_user = User(**user_dict)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
