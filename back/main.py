@@ -154,7 +154,7 @@ class MissionParticipant(SQLModel, table=True):
 # --- 4. Schemas for API I/O (Create/Read) ---
 
 class UserCreate(UserBase):
-    password: str
+    password: str = Field(max_length=72) 
 
 class UserRead(UserBase):
     id: uuid.UUID
@@ -239,7 +239,7 @@ def plan_mission_with_ai(request: AIPlannerRequest):
     return suggested_tasks
 
 # User Endpoints
-@app.post("/users/", response_model=UserRead, status_code=status.HTTP_2_CREATED, tags=["Users"])
+@app.post("/users/", response_model=UserRead, status_code=status.HTTP_201_CREATED, tags=["Users"])
 def create_user(user_in: UserCreate, session: Session = Depends(get_session)):
     # Hash the password before creating the user object
     hashed_password = get_password_hash(user_in.password)
