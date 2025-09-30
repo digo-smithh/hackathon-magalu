@@ -6,7 +6,8 @@ from passlib.context import CryptContext
 
 from config import settings
 
-pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+# Explicitly set the default scheme for hashing
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto", default="argon2")
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verifies a plain password against a hashed one."""
