@@ -23,11 +23,8 @@ class Mission(SQLModel, table=True):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str
     description: Optional[str] = None
-    status: str = "active"
-    createdById: uuid.UUID = Field(foreign_key="user.id")
-    createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc)) # NOVO
-    updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc)) # NOVO
-    isActive: bool = Field(default=True) # NOVO
+    createdBy: uuid.UUID = Field(foreign_key="user.id")
+    isActive: bool = Field(default=True)
 
     createdBy: User = Relationship(back_populates="createdMissions")
     tasks: List["Task"] = Relationship(back_populates="mission")
