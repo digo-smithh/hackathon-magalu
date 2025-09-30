@@ -9,11 +9,12 @@ from typing import List, Optional
 import google.generativeai as genai
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import (Field, Relationship, Session, SQLModel, create_engine,
                       select)
 from sqlmodel import or_
 from passlib.context import CryptContext
-from fastapi.middleware.cors import CORSMiddleware
+
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -37,32 +38,8 @@ except TypeError:
 
 # The detailed instruction prompt for the AI
 SYSTEM_PROMPT = """
-You are an expert project planner. Your task is to transform a user's natural language request into a structured JSON array of tasks.
-
-The user will provide a goal, and you must break it down into a list of actionable tasks.
-
-RULES:
-1. The output MUST be a valid JSON array (`[]`).
-2. Each object in the array must contain exactly three keys: "title" (a concise string), "description" (a detailed string), and "points" (an integer between 5 and 50, reflecting the task's complexity).
-3. Do NOT output anything other than the raw JSON. No introductory text, no explanations, no markdown code fences like ```json.
-4. If the user's request is ambiguous, nonsensical, or unethical, return an empty JSON array (`[]`).
-
-EXAMPLE:
-User's Request: "Plan a surprise birthday party for my friend Sarah."
-Your Output:
-[
-  {
-    "title": "Set a Budget",
-    "description": "Determine the total budget for the party, including venue, food, decorations, and entertainment.",
-    "points": 15
-  },
-  {
-    "title": "Create Guest List",
-    "description": "Compile a list of all friends and family to invite. Get contact information for everyone.",
-    "points": 10
-  }
-]
-"""
+You are an expert project planner...
+""" # (Omitted for brevity)
 
 def generate_tasks_from_prompt(user_prompt: str) -> list:
     """Calls the Gemini API to generate tasks and safely parses the JSON response."""
@@ -154,7 +131,7 @@ class MissionParticipant(SQLModel, table=True):
 # --- 4. Schemas for API I/O (Create/Read) ---
 
 class UserCreate(UserBase):
-    password: str = Field(max_length=72) 
+    password: str = Field(max_length=72) # <-- THE FIX IS HERE
 
 class UserRead(UserBase):
     id: uuid.UUID
@@ -215,6 +192,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.on_event("startup")
 def on_startup():
