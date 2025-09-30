@@ -1,0 +1,22 @@
+# requirements.txt
+
+# Web Framework
+fastapi
+
+# ASGI Server para rodar a aplicação
+uvicorn[standard]
+
+# ORM e validação de dados que combina SQLAlchemy e Pydantic
+sqlmodel
+
+# Google Generative AI
+google-generativeai
+
+# Carregamento de variáveis de ambiente do arquivo .env
+python-dotenv
+
+# Biblioteca para hashing de senhas
+argon2-cffi
+
+# JWT token management
+python-jose[cryptography]
