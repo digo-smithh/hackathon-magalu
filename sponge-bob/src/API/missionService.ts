@@ -1,3 +1,5 @@
+// src/API/missionService.ts
+
 import { Task } from '../types/task';
 import api from './api';
 
@@ -16,9 +18,9 @@ export const addParticipantToMission = async (missionId: string, userId: string)
     return response.data;
 }
 
-export const createMissionWithTasks = async (mission: object) => {
-    console.log(mission)
-    const response = await api.post(`/missions/with-tasks/`, {mission});
+export const createMissionWithTasks = async (missionData: object) => {
+    console.log("Enviando para o backend:", { mission: missionData });
+    // CORRIGIDO: Garante que o payload esteja aninhado corretamente
+    const response = await api.post(`/missions/with-tasks/`, { mission: missionData });
     return response.data;
 }
-  

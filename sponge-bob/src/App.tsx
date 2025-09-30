@@ -1,3 +1,5 @@
+// src/App.tsx
+
 import { useState, useEffect } from 'react';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
@@ -21,9 +23,10 @@ function AppContent() {
 
   useEffect(() => {
     loadGameLists();
-  }, [refreshKey]);
+  }, [refreshKey, user]);
 
   const loadGameLists = () => {
+    // A lógica de carregamento será refeita na próxima etapa
     const lists = [] as GameList[];
     setGameLists(lists);
   };
@@ -45,7 +48,7 @@ function AppContent() {
 
   const handleCreateAIMission = () => {
     setCurrentScreen('ai-create-mission');
-  };
+  };
 
   const handleSaveMission = (missionData: {
     name: string;
@@ -53,13 +56,12 @@ function AppContent() {
     steps: TaskStep[]; // Recebe os 'steps' do formulário
   }) => {
     // Converte 'steps' do formulário para o formato 'Task' da API
-    const tasks: Task[] = missionData.steps.map((step) => ({
-      id: step.id,
+    const tasks: Omit<Task, 'id'>[] = missionData.steps.map((step) => ({
       title: step.title,
       description: step.description,
       deadline: step.deadline,
-      completed: false,
       points: step.points,
+      completed: false,
       isFinal: false,
       createdAt: new Date().toISOString(),
       bossType: step.bossType,
@@ -76,28 +78,26 @@ function AppContent() {
     const finalMissionPayload = {
       name: missionData.name,
       description: missionData.description,
-      createdBy: user ? user.id : '', // Adiciona o ID do usuário aqui
+      createdById: user ? user.id : '', // Chave correta para o backend
       tasks: tasks, // Envia o array de 'tasks' formatado
     };
 
     createMissionWithTasks(finalMissionPayload);
 
-    alert('Missão criada com sucesso!');
+    alert('Missão criada com sucesso! 🌟');
 
     setRefreshKey(prev => prev + 1);
     setCurrentScreen('home');
   };
 
   const handleOnLoginSuccess = () => {
-
-
     setRefreshKey(prev => prev + 1);
     setCurrentScreen('home');
   }
 
   const handleOnNavigateToSignUp = () => {
     setRefreshKey(prev => prev + 1);
-    setCurrentScreen('login'); 
+    setCurrentScreen('login');
   }
 
   const selectedGameList = gameLists.find(list => list.id === selectedGameListId) || null;
@@ -111,7 +111,7 @@ function AppContent() {
     <>
       <div className="min-h-screen">
         {currentScreen === 'home' && (
-          <HomeScreen 
+          <HomeScreen
             gameLists={gameLists}
             onSelectList={handleSelectList}
             onCreateMission={handleCreateMission}
@@ -121,8 +121,8 @@ function AppContent() {
         )}
         
         {currentScreen === 'game' && selectedGameList && (
-          <GameScreen 
-            gameList={selectedGameList} 
+          <GameScreen
+            gameList={selectedGameList}
             onBack={handleBackToHome}
             onUpdateLists={() => setRefreshKey(prev => prev + 1)}
           />
@@ -139,16 +139,14 @@ function AppContent() {
           <AICreateMissionScreen
             onBack={handleBackToHome}
             onSaveMission={handleSaveMission}
-          />
-        )}
+          />
+        )}
       </div>
       <Toaster position="top-center" />
     </>
   );
 }
 
-// 2. ALTERE SEU COMPONENTE APP PARA FICAR ASSIM:
-//    Ele agora só serve para "envolver" o AppContent com o provedor.
 export default function App() {
   return (
     <AuthProvider>
