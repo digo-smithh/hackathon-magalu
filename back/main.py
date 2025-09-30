@@ -58,7 +58,7 @@ def generate_tasks_from_prompt(user_prompt: str) -> list:
         raise HTTPException(status_code=500, detail="Google API Key is not configured on the server.")
         
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-pro')
         full_prompt = f"{SYSTEM_PROMPT}\nUser's Request: \"{user_prompt}\"\nYour Output:"
         response = model.generate_content(full_prompt)
         cleaned_response = response.text.strip().replace("```json", "").replace("```", "").strip()
@@ -93,7 +93,7 @@ class User(UserBase, table=True):
     password: str
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     isActive: bool = True
-    
+    updatedAt: datetime = Field(default_factory=datetime.utcnow) 
     createdMissions: List["Mission"] = Relationship(back_populates="createdBy")
     participations: List["MissionParticipant"] = Relationship(back_populates="user")
 
@@ -105,7 +105,8 @@ class MissionBase(SQLModel):
 class Mission(MissionBase, table=True):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     createdAt: datetime = Field(default_factory=datetime.utcnow)
-    
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
     createdById: uuid.UUID = Field(foreign_key="user.id")
     createdBy: User = Relationship(back_populates="createdMissions")
     
@@ -120,6 +121,9 @@ class TaskBase(SQLModel):
 class Task(TaskBase, table=True):
     id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4, primary_key=True)
     
+    createdAt: datetime = Field(default_factory=datetime.utcnow)
+    updatedAt: datetime = Field(default_factory=datetime.utcnow)
+
     missionId: uuid.UUID = Field(foreign_key="mission.id")
     mission: Mission = Relationship(back_populates="tasks")
 
@@ -212,6 +216,14 @@ def create_user(user_in: UserCreate, session: Session = Depends(get_session)):
     session.refresh(db_user)
     return db_user
 
+@app.get("/users/", response_model=List[UserRead], tags=["Users"])
+def list_users(session: Session = Depends(get_session)):
+    """
+    Retrieves a list of all users.
+    """
+    users = session.exec(select(User)).all()
+    return users
+
 @app.get("/users/{user_id}", response_model=UserRead, tags=["Users"])
 def get_user(user_id: uuid.UUID, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
@@ -227,6 +239,14 @@ def create_mission(mission_in: MissionCreate, session: Session = Depends(get_ses
     session.commit()
     session.refresh(db_mission)
     return db_mission
+
+@app.get("/missions/", response_model=List[MissionRead], tags=["Missions"])
+def list_missions(session: Session = Depends(get_session)):
+    """
+    Retrieves a list of all missions.
+    """
+    missions = session.exec(select(Mission)).all()
+    return missions
 
 @app.get("/missions/{mission_id}", response_model=MissionReadWithParticipants, tags=["Missions"])
 def get_mission(mission_id: uuid.UUID, session: Session = Depends(get_session)):
@@ -271,3 +291,17 @@ def create_task_for_mission(mission_id: uuid.UUID, task_in: TaskCreate, session:
     session.commit()
     session.refresh(db_task)
     return db_task
+
+@app.get("/missions/{mission_id}/tasks/", response_model=List[TaskRead], tags=["Tasks"])
+def list_tasks_for_mission(mission_id: uuid.UUID, session: Session = Depends(get_session)):
+    """
+    Retrieves a list of all tasks for a specific mission.
+    """
+    # First, check if the mission exists
+    mission = session.get(Mission, mission_id)
+    if not mission:
+        raise HTTPException(status_code=404, detail="Mission not found")
+    
+    # Query for the tasks related to that mission
+    tasks = session.exec(select(Task).where(Task.missionId == mission_id)).all()
+    return tasks
