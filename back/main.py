@@ -13,7 +13,7 @@ from sqlmodel import (Field, Relationship, Session, SQLModel, create_engine,
                       select)
 from sqlmodel import or_
 from passlib.context import CryptContext
-
+from fastapi.middleware.cors import CORSMiddleware
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -201,6 +201,20 @@ class MissionWithTasksCreate(MissionCreate):
 # --- 5. FastAPI App and DB Session ---
 
 app = FastAPI(title="QuestTasks API")
+
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    "http://localhost:8080",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 def on_startup():
