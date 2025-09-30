@@ -138,19 +138,18 @@ def create_mission_with_tasks(session: Session, mission_data: MissionWithTasksCr
     session.commit()
     session.refresh(new_mission)
 
-    # ALTERADO: Processa a Task completa (TaskCreate) em vez de apenas a sugestão
-    for task_data in mission_data.tasks:
+    for task_suggestion in mission_data.tasks:
+        # CORRIGIDO: A variável correta é 'task_suggestion', não 'task.data'
         new_task = Task(
-            id='',
-            title=task_data.title,
-            description=task_data.description,
-            points=task_data.points,
-            deadline=task_data.deadline,
-            isFinal=task_data.isFinal,
-            bossType=task_data.bossType,
-            bossName=task_data.bossName,
-            completed=task.data.completed,
-            createdAt=task.data.createdAt,
+            title=task_suggestion.title,
+            description=task_suggestion.description,
+            points=task_suggestion.points,
+            deadline=task_suggestion.deadline,
+            completed=task_suggestion.completed,
+            isFinal=task_suggestion.isFinal,
+            bossType=task_suggestion.bossType,
+            bossName=task_suggestion.bossName,
+            missionId=new_mission.id,
         )
         session.add(new_task)
     
