@@ -1,0 +1,13 @@
+# requirements.txt
+
+# Web Framework
+fastapi
+
+# ASGI Server para rodar a aplicação
+uvicorn[standard]
+
+# ORM e validação de dados que combina SQLAlchemy e Pydantic
+sqlmodel
+
+# Google Generative AI
+google-generativeai
