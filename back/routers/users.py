@@ -31,15 +31,18 @@ def handle_get_user(user_id: uuid.UUID, session: Session = Depends(get_session))
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
-@router.get("/{user_id}/missions/", response_model=List[MissionRead])
+@router.get("/{user_id}/missions/", response_model=List[MissionReadWithParticipants]) # ALTERADO: Usa o response_model correto
 def handle_get_user_missions(user_id: uuid.UUID, session: Session = Depends(get_session)):
     """
-    Retrieves a list of all missions a user is involved in (either created or participates in).
+    Retrieves a list of all missions a user is involved in, including participants and tasks.
     """
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    # A lógica para encontrar as missões está correta, mas a forma de retornar os dados precisa ser ajustada
+    # para incluir os relacionamentos (participantes e tarefas), o que o SQLModel faz automaticamente
+    # se o response_model for `MissionReadWithParticipants`.
     statement = (
         select(Mission)
         .join(MissionParticipant, Mission.id == MissionParticipant.mission_id, isouter=True)

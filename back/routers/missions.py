@@ -10,7 +10,7 @@ from database import get_session
 from models import Mission, Task, MissionParticipant, User
 from schemas import (
     MissionCreate, MissionRead, MissionReadWithParticipants,
-    TaskCreate, TaskRead, MissionWithTasksCreate,
+    TaskCreate, TaskRead, MissionCreationRequest, # ALTERADO
     ParticipantCreate, MissionParticipantRead, MissionParticipantReadWithUser
 )
 
@@ -18,12 +18,14 @@ router = APIRouter()
 
 @router.post("/with-tasks", response_model=MissionRead)
 def handle_create_mission_with_tasks(
-    mission_data: MissionWithTasksCreate, session: Session = Depends(get_session)
+    # ALTERADO: Usa o novo schema para o payload aninhado
+    request: MissionCreationRequest, 
+    session: Session = Depends(get_session)
 ):
     """Creates a mission and its tasks together by calling the service layer."""
-    return services.create_mission_with_tasks(session=session, mission_data=mission_data)
-
+    return services.create_mission_with_tasks(session=session, mission_data=request.mission)
 @router.post("/", response_model=MissionRead, status_code=status.HTTP_201_CREATED)
+
 def handle_create_mission(mission_in: MissionCreate, session: Session = Depends(get_session)):
     """Creates a single mission without any tasks."""
     db_mission = Mission.model_validate(mission_in)
