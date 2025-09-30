@@ -11,6 +11,8 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException, status
 from sqlmodel import (Field, Relationship, Session, SQLModel, create_engine,
                       select)
+from sqlmodel import or_
+
 
 # --- 1. AI Planner Service ---
 
@@ -230,6 +232,33 @@ def get_user(user_id: uuid.UUID, session: Session = Depends(get_session)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@app.get("/users/{user_id}/missions/", response_model=List[MissionRead], tags=["Users"])
+def get_user_missions(user_id: uuid.UUID, session: Session = Depends(get_session)):
+    """
+    Retrieves a list of all missions a user is involved in (either created or participates in).
+    """
+    # First, ensure the user exists
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # This query finds missions where the user is the creator OR a participant
+    statement = (
+        select(Mission)
+        .join(MissionParticipant, Mission.id == MissionParticipant.mission_id, isouter=True)
+        .where(
+            or_(
+                Mission.createdById == user_id,
+                MissionParticipant.user_id == user_id
+            )
+        )
+        .distinct()
+    )
+    
+    missions = session.exec(statement).all()
+    return missions
 
 # Mission Endpoints
 @app.post("/missions/", response_model=MissionRead, status_code=status.HTTP_201_CREATED, tags=["Missions"])
