@@ -68,7 +68,7 @@ class MissionParticipantReadWithUser(MissionParticipantRead):
 class MissionReadWithParticipants(MissionRead):
     participants: List[MissionParticipantReadWithUser] = []
     
-    
+# --- Token and Login Schemas ---
 class Token(SQLModel):
     """Schema for the JWT access token response."""
     access_token: str
@@ -77,3 +77,10 @@ class Token(SQLModel):
 class TokenData(SQLModel):
     """Schema for the data encoded within the JWT."""
     username: str | None = None
+
+# --- ADD THIS CLASS ---
+class LoginResponse(SQLModel):
+    """Schema for the login response, including the token and user info."""
+    access_token: str
+    token_type: str
+    user: UserRead
