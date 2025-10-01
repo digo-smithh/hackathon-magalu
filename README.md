@@ -1,120 +1,155 @@
-# QuestTasks
 
-*DISCLAIMER: to run the terraform vm on MagaluCloud an API needs to be put in a terraform.tfvars file variable*
+# 🍍 QuestTasks: A Missão na Fenda do Biquíni
 
+Bem-vindo ao QuestTasks, uma aplicação de lista de tarefas gamificada que transforma seus objetivos em missões épicas na Fenda do Biquíni\! Crie tarefas manualmente ou use o poder da Inteligência Artificial para gerar um plano de ação, compita com amigos em um mapa interativo e ganhe pontos para se tornar o maior aventureiro.
 
-QuestTasks API
+Este repositório contém tanto o **Backend** (API em FastAPI) quanto o **Frontend** (aplicação em React).
 
-QuestTasks is a backend API for a task management application that uses AI to break down large study goals into smaller, manageable tasks.
+## ✨ Funcionalidades
 
-🚀 Features
+  * **Autenticação de Usuário**: Sistema seguro de login e criação de contas via JWT.
+  * **Gerenciamento de Missões e Usuários**: Crie usuários e organize tarefas em missões compartilhadas.
+  * **Criação de Missões**:
+      * **Manual**: Crie missões passo a passo, definindo cada etapa, prazo e pontuação.
+      * **Com Inteligência Artificial**: Descreva um objetivo (ex: "aprender a tocar violão") e deixe o Google Generative AI criar um plano de tarefas detalhado para você.
+  * **Tela de Jogo Interativa**: Acompanhe o progresso da missão em duas visualizações:
+      * **Lista de Tarefas**: Uma visão clássica para gerenciar as etapas.
+      * **Mapa de Jogo**: Uma visualização gamificada que mostra o progresso dos jogadores em um mapa temático.
+  * **Gamificação**: Ganhe pontos ao concluir tarefas, enfrente "chefões" e veja a tarefa final valer o dobro de pontos\!
 
-    AI-Powered Task Generation: Automatically generate a list of tasks from a single prompt.
+## 🛠️ Tecnologias Utilizadas
 
-    User and Mission Management: Create users, organize tasks into missions, and track participants.
+### Backend
 
-    Authentication: Secure your application with JWT-based authentication.
+  * **Framework**: FastAPI
+  * **ORM**: SQLModel (combinação de SQLAlchemy e Pydantic)
+  * **Inteligência Artificial**: Google Generative AI
+  * **Autenticação**: JWT (python-jose) e Hashing de senhas (argon2-cffi)
+  * **Servidor ASGI**: Uvicorn
+  * **Infraestrutura como Código**: Terraform para deploy na MagaluCloud
 
-🛠️ Technologies
+### Frontend
 
-    FastAPI
+  * **Framework**: React
+  * **Build Tool**: Vite
+  * **Linguagem**: TypeScript
+  * **Estilização**: Tailwind CSS
+  * **Componentes**: shadcn/ui
+  * **Ícones**: Lucide React
+  * **Requisições HTTP**: Axios
 
-    SQLModel
+## 🚀 Como Executar o Projeto
 
-    Google Generative AI
+Siga os passos abaixo para rodar a aplicação completa (Backend e Frontend) localmente.
 
-    Terraform
+### 1\. Backend (API)
 
-⚙️ Getting Started
+Primeiro, configure e inicie o servidor da API.
 
-Prerequisites
+  * **Pré-requisitos**: Python 3.10+
 
-    Python 3.10+
+<!-- end list -->
 
-    An active Google AI API key
+1.  **Navegue até a pasta do backend:**
 
-Installation
+    ```bash
+    cd hackathon-magalu/back
+    ```
 
-    Clone the repository:
-    Bash
+2.  **Crie e ative um ambiente virtual:**
 
-git clone https://github.com/digo-smithh/hackathon-magalu.git
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    # No Windows, use: venv\Scripts\activate
+    ```
 
-Navigate to the backend directory:
-```bash
-cd hackathon-magalu/back
-```bash
-# Running Locally
+3.  **Instale as dependências:**
 
-Create and activate a virtual environment:
-Bash
-
-python3 -m venv venv
-source venv/bin/activate
-
-Install the dependencies:
-```bash
-
+    ```bash
     pip install -r requirements.txt
+    ```
 
-    Create a .env file and add your environment variables:
+4.  **Configure as variáveis de ambiente:**
+    Crie um arquivo chamado `.env` na pasta `back/` e adicione suas chaves:
 
-    GOOGLE_API_KEY="your_google_api_key"
-    SECRET_KEY="your_secret_key"
+    ```env
+    GOOGLE_API_KEY="sua_chave_de_api_do_google"
+    SECRET_KEY="uma_chave_secreta_forte_para_jwt"
     ALGORITHM="HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
-🏃‍♀️ Running the Application
+    ```
 
-To run the application, use the following command:
+5.  **Inicie o servidor:**
 
-```bash
-uvicorn main:app --reload
-```
-The API will be available at http://localhost:8000.
+    ```bash
+    uvicorn main:app --reload
+    ```
 
+    A API estará rodando em `http://localhost:8000`.
 
-☁️ Deployment with Terraform
+### 2\. Frontend (Aplicação Web)
 
-You can also deploy the application to a virtual machine in the cloud using Terraform.
+Com o backend rodando, configure e inicie a interface do usuário em um **novo terminal**.
 
-Prerequisites
+  * **Pré-requisitos**: Node.js 18+
 
-    Terraform installed on your local machine.
+<!-- end list -->
 
-    A Magalu Cloud API key.
+1.  **Navegue até a pasta do frontend:**
 
-Steps
+    ```bash
+    cd hackathon-magalu/sponge-bob
+    ```
 
-    Navigate to the root of the project directory.
+2.  **Instale as dependências:**
 
-    Create a terraform.tfvars file. This file will hold your secret keys and is ignored by Git to prevent you from accidentally committing secrets.
+    ```bash
+    npm install
+    ```
 
-    Add your secrets to the terraform.tfvars file:
-    Terraform
+3.  **Inicie o servidor de desenvolvimento:**
 
-api_key        = "your_magalu_cloud_api_key"
-google_api_key = "your_google_api_key"
-jwt_secret_key = "your_jwt_secret_key"
+    ```bash
+    npm run dev
+    ```
 
-Initialize Terraform:
+    O projeto estará disponível em `http://localhost:3000`.
 
-```
-terraform init
-```
-Apply the Terraform plan to create the infrastructure:
+## ☁️ Deploy com Terraform na MagaluCloud
 
-```bash
+O projeto está configurado para ser implantado em uma máquina virtual na MagaluCloud usando Terraform.
+
+  * **Pré-requisitos**: Terraform instalado.
+
+<!-- end list -->
+
+1.  **Navegue até a raiz do projeto:**
+
+    ```bash
+    cd hackathon-magalu
+    ```
+
+2.  **Crie o arquivo de variáveis secretas:**
+    Crie um arquivo chamado `terraform.tfvars` e adicione suas chaves:
+
+    ```hcl
+    api_key        = "sua_chave_de_api_da_magalu_cloud"
+    google_api_key = "sua_chave_de_api_do_google"
+    jwt_secret_key = "uma_chave_secreta_forte_para_jwt"
+    ```
+
+3.  **Inicialize e aplique o Terraform:**
+
+    ```bash
+    terraform init
     terraform apply
+    ```
 
-    Terraform will show you a plan and ask for confirmation before creating the resources. Type yes to proceed.
-```
-Once the process is complete, Terraform will output the IP address of the virtual machine. The API will be running and accessible at http://<your_vm_ip>:8000.
+    Confirme a aplicação digitando `yes`. Ao final, o Terraform fornecerá o endereço de IP da VM onde a API estará rodando.
 
-Tearing Down the Infrastructure
+4.  **Para remover a infraestrutura:**
 
-To destroy the resources created by Terraform and avoid incurring further costs, run:
-
-```bash
-terraform destroy
-```
+    ```bash
+    terraform destroy
+    ```
