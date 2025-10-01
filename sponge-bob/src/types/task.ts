@@ -17,21 +17,24 @@ export interface Task {
 export interface Player {
   id: string;
   name: string;
+  email: string;
+  username: string;
   avatar: string;
-  totalPoints: number;
-  completedTasks: number;
-  totalTasks: number;
-  isCurrentUser?: boolean;
-  currentPosition?: number; // Position on the map (task index)
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  createdMissions: string;
+  participations: string;
 }
 
 export interface GameList {
   id: string;
   name: string;
   description: string;
-  tasks: Task[];
-  players: Player[];
   createdBy: string;
+  participants: Player[];
+  tasks: Task[];
   createdAt: string;
+  updatedAt: string;
   isActive: boolean;
 }

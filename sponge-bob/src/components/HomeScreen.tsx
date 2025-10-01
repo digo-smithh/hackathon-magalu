@@ -8,14 +8,13 @@ import { getMissionsByUser } from '../API/userService.ts';
 import { useAuth } from '../auth/AuthProvider.tsx';
 
 interface HomeScreenProps {
-  gameLists: GameList[];
   onSelectList: (list: GameList) => void;
   onCreateMission: () => void;
   onCreateAIMission?: () => void;
   onRefresh: () => void;
 }
 
-export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateAIMission, onRefresh }: HomeScreenProps) {
+export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, onRefresh }: HomeScreenProps) {
   const { user } = useAuth();
   const [missions, setMissions] = useState<GameList[]>([]);
 
@@ -23,6 +22,7 @@ export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateA
     async function fetchData() {
       try {
         const data = await getMissionsByUser(user?.id); // Replace '1' with actual user ID
+        console.log('Fetched missions:', data);
         setMissions(data);
       }
       catch (error) {
@@ -104,7 +104,7 @@ export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateA
         </div>
 
         {/* Game Lists Grid */}
-        {missions.length > 0 && (
+        {missions?.length > 0 && (
           <div>
             <h2 className="text-pink-600 text-2xl font-bold text-center mb-8 drop-shadow-md">
               Suas Missões na Fenda do Biquini
@@ -126,12 +126,12 @@ export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateA
                       {list.description}
                     </CardDescription>
                   </CardHeader>
-                  
+{/*                   
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center text-purple-700">
                         <Users size={14} className="mr-1" />
-                        <span>{list.players.length} aventureir{list.players.length !== 1 ? 'os' : 'o'}</span>
+                        <span>{list.players?.length} aventureir{list.players?.length !== 1 ? 'os' : 'o'}</span>
                       </div>
                       
                       <div className="flex items-center text-yellow-700 font-bold">
@@ -155,13 +155,13 @@ export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateA
                           />
                         </div>
                       ))}
-                      {list.players.length > 3 && (
+                      {list.players?.length > 3 && (
                         <div className="w-8 h-8 rounded-full border-2 border-pink-400 bg-gradient-to-br from-yellow-200 to-pink-200 flex items-center justify-center text-xs text-purple-700 font-bold shadow-md">
                           +{list.players.length - 3}
                         </div>
                       )}
                     </div>
-                  </CardContent>
+                  </CardContent> */}
                 </Card>
               ))}
             </div>
@@ -169,7 +169,7 @@ export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateA
         )}
 
         {/* Empty State */}
-        {missions.length === 0 && (
+        {missions?.length === 0 && (
           <Card className="bg-gradient-to-br from-yellow-200 to-pink-500 border-purple-400 shadow-2xl max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <div className="text-6xl mb-4">🍍</div>

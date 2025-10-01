@@ -18,23 +18,19 @@ function AppContent() {
 
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
   const [selectedGameListId, setSelectedGameListId] = useState<string | null>(null);
-  const [gameLists, setGameLists] = useState<GameList[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    loadGameLists();
-  }, [refreshKey, user]);
-
-  const loadGameLists = () => {
-    // A lógica de carregamento será refeita na próxima etapa
-    const lists = [] as GameList[];
-    setGameLists(lists);
-  };
-
-  const handleSelectList = (gameList: GameList) => {
-    setSelectedGameListId(gameList.id);
+  const handleSelectList = async (gameList: GameList) => {
+  try {
+    // Busca os detalhes completos da missão, incluindo as tarefas
+    const fullGameList = await getMission(gameList.id);
+    setSelectedGameList(fullGameList); // Armazena o objeto completo no estado
     setCurrentScreen('game');
-  };
+  } catch (error) {
+    console.error("Erro ao buscar detalhes da missão:", error);
+    toast.error("Não foi possível carregar os detalhes da missão.");
+  }
+};
 
   const handleBackToHome = () => {
     setCurrentScreen('home');
@@ -100,8 +96,6 @@ function AppContent() {
     setCurrentScreen('login');
   }
 
-  const selectedGameList = gameLists.find(list => list.id === selectedGameListId) || null;
-
   // Lógica de renderização
   if (!user) {
     return <LoginScreen onLoginSuccess={handleOnLoginSuccess} onNavigateToSignUp={handleOnNavigateToSignUp}/>;
@@ -112,7 +106,6 @@ function AppContent() {
       <div className="min-h-screen">
         {currentScreen === 'home' && (
           <HomeScreen
-            gameLists={gameLists}
             onSelectList={handleSelectList}
             onCreateMission={handleCreateMission}
             onCreateAIMission={handleCreateAIMission}
@@ -122,7 +115,6 @@ function AppContent() {
         
         {currentScreen === 'game' && selectedGameList && (
           <GameScreen
-            gameList={selectedGameList}
             onBack={handleBackToHome}
             onUpdateLists={() => setRefreshKey(prev => prev + 1)}
           />

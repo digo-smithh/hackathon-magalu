@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { AddTaskModal } from './AddTaskModal';
@@ -6,18 +6,42 @@ import { TaskItem } from './TaskItem';
 import { FullscreenGameMap } from './FullscreenGameMap';
 import { ArrowLeft, Users, Trophy, List, Map } from 'lucide-react';
 import { GameList, Task, Player } from '../types/task';
+import { getMission } from '../API/missionService';
+import { useAuth } from '../auth/AuthProvider';
 
 interface GameScreenProps {
-  gameList: GameList;
   onBack: () => void;
   onUpdateLists?: () => void;
 }
 
-export function GameScreen({ gameList, onBack }: GameScreenProps) {
-  const [tasks, setTasks] = useState<Task[]>(gameList.tasks);
-  
+export function GameScreen({ onBack }: GameScreenProps) {
+  const { user } = useAuth();
+
+  const [gameList, setMissions] = useState<GameList>();
+
   const [showTaskList, setShowTaskList] = useState(false);
-  const currentPlayer = gameList.players.find(p => p.isCurrentUser)!;
+
+  const currentPlayer = gameList.participants.find(p => p.isCurrentUser)!;
+  const tasks = gameList.tasks;
+
+   useEffect(() => {
+     async function fetchData() {
+       try {
+        const data = await getMission()
+
+        console.log('Fetched mission:', data);
+
+        setTasks(data.tasks);
+        setMission(data);
+       }
+       catch (error) {
+         console.error('Error fetching missions:', error);
+       }
+     }
+     
+     fetchData();
+   }, [selectedGameListId]);
+ 
 
   const handleToggleTask = (id: string) => {
     setTasks(prevTasks =>

@@ -19,7 +19,6 @@ export interface TaskStep {
   bossName: string;
 }
 
-
 interface AddMissionScreenProps {
   onBack: () => void;
   onSaveMission: (mission: {

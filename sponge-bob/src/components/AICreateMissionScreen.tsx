@@ -8,6 +8,7 @@ import { ArrowLeft, Sparkles, Trash2, Edit2, Plus, Check } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 import { BossType } from '../types/task';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { planMission } from '../API/AIService';
 
 interface AICreateMissionScreenProps {
   onBack: () => void;
@@ -53,51 +54,21 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
     }
 
     setIsGenerating(true);
+    
+      const response = await planMission(aiPrompt);
 
-    // Simula processamento de IA (substitua com sua chamada de IA real)
-    setTimeout(() => {
-      // MOCK - Aqui você fará a chamada para sua API de IA
-      // Exemplo de resposta esperada da IA:
-      const mockAIResponse = {
-        missionName: 'Missão Exemplo',
-        missionDescription: 'Descrição gerada pela IA',
-        tasks: [
-          {
-            id: `task-${Date.now()}-1`,
-            title: 'Task 1 gerada pela IA',
-            description: 'Descrição da primeira task',
-            points: 10,
-            deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            bossType: 'none' as BossType,
-          },
-          {
-            id: `task-${Date.now()}-2`,
-            title: 'Task 2 gerada pela IA',
-            description: 'Descrição da segunda task',
-            points: 15,
-            deadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            bossType: 'plankton' as BossType,
-          },
-        ],
-      };
+      console.log('AI Response:', response);
 
-      // IMPORTANTE: Substitua esta parte com sua chamada de IA
-      // const aiResponse = await fetch('SUA_API_DE_IA', {
-      //   method: 'POST',
-      //   body: JSON.stringify({ prompt: aiPrompt }),
-      // });
-      // const data = await aiResponse.json();
-
-      setMissionName(mockAIResponse.missionName);
-      setMissionDescription(mockAIResponse.missionDescription);
-      setGeneratedTasks(mockAIResponse.tasks);
+      setMissionName(response.missionName);
+      setMissionDescription(response.missionDescription);
+      setGeneratedTasks(response.tasks);
       
       toast.success('🧽 Missão gerada!', {
         description: 'Revise as tasks e faça ajustes se necessário.',
       });
       
       setIsGenerating(false);
-    }, 2000);
+    
   };
 
   const handleEditTask = (task: GeneratedTask) => {
