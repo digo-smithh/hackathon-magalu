@@ -5,7 +5,7 @@ Bem-vindo ao Bob Esponja em: derrotando matérias, uma aplicação de lista de t
 
 Este repositório contém tanto o **Backend** (API em FastAPI) quanto o **Frontend** (aplicação em React).
 # Durante o hackathon você poderá testar a aplicação [aqui](http://201.23.71.157:3000)
-
+(logue com user string e senha string)
 ## ✨ Funcionalidades
 
   * **Autenticação de Usuário**: Sistema seguro de login.
