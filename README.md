@@ -1,21 +1,20 @@
 
-# 🍍 QuestTasks: A Missão na Fenda do Biquíni
+# 🍍 Bob Esponja em: derrotando matérias
 
-Bem-vindo ao QuestTasks, uma aplicação de lista de tarefas gamificada que transforma seus objetivos em missões épicas na Fenda do Biquíni\! Crie tarefas manualmente ou use o poder da Inteligência Artificial para gerar um plano de ação, compita com amigos em um mapa interativo e ganhe pontos para se tornar o maior aventureiro.
+Bem-vindo ao Bob Esponja em: derrotando matérias, uma aplicação de lista de tarefas gamificada que transforma seus objetivos em missões épicas na Fenda do Biquíni\! Crie tarefas manualmente ou use o poder da Inteligência Artificial para gerar um plano de ação
 
 Este repositório contém tanto o **Backend** (API em FastAPI) quanto o **Frontend** (aplicação em React).
 
 ## ✨ Funcionalidades
 
-  * **Autenticação de Usuário**: Sistema seguro de login e criação de contas via JWT.
-  * **Gerenciamento de Missões e Usuários**: Crie usuários e organize tarefas em missões compartilhadas.
+  * **Autenticação de Usuário**: Sistema seguro de login.
   * **Criação de Missões**:
       * **Manual**: Crie missões passo a passo, definindo cada etapa, prazo e pontuação.
       * **Com Inteligência Artificial**: Descreva um objetivo (ex: "aprender a tocar violão") e deixe o Google Generative AI criar um plano de tarefas detalhado para você.
   * **Tela de Jogo Interativa**: Acompanhe o progresso da missão em duas visualizações:
       * **Lista de Tarefas**: Uma visão clássica para gerenciar as etapas.
       * **Mapa de Jogo**: Uma visualização gamificada que mostra o progresso dos jogadores em um mapa temático.
-  * **Gamificação**: Ganhe pontos ao concluir tarefas, enfrente "chefões" e veja a tarefa final valer o dobro de pontos\!
+  * **Gamificação**: Ganhe pontos ao concluir tarefas, enfrente chefões (seus professores) e conclua seu objetivo final!
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -198,6 +197,10 @@ O projeto está configurado para ser implantado em uma máquina virtual na Magal
 2. **Visualize suas tarefas**
 3. **Marque tarefas como completas** clicando no checkbox
 4. **Acompanhe seu progresso** no topo da tela
+
+### Planos para o futuro
+
+Uma possível melhoria para nosso jogo seria poder adicionar outros jogadores para completar as missões, assim o jogador poderia competir com seus amigos! Quem será que estudaria mais rápido para a prova??
 
 ## 📝 Licença
 
