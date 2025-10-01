@@ -33,7 +33,6 @@ export function LoginScreen({ onLoginSuccess, onNavigateToSignUp }: LoginScreenP
       const result = await login(email, password);
 
       if (result && result.access_token) {
-        alert('Login bem-sucedido!');
 
         await handleLogin(email, password);
         

@@ -21,46 +21,20 @@ export function GameScreen({ gameList, onBack }: GameScreenProps) {
   const [tasks, setTasks] = useState<Task[]>(gameList.tasks);
   const [showTaskList, setShowTaskList] = useState(false);
 
-  // Mapeia os participantes recebidos do backend para o tipo 'Player' que o frontend utiliza
+  // Mapeia os dados dos participantes do backend para o tipo 'Player' do frontend
   const players: Player[] = gameList.participants.map(p => ({
     id: p.user.id,
     name: p.user.name,
     avatar: p.user.avatar || '',
     totalPoints: p.total_points,
-    completedTasks: 0, // O backend não fornece este dado, então usamos um valor padrão
+    // Nota: O backend não fornece estes dados, então estamos preenchendo com valores padrão
+    completedTasks: 0,
     totalTasks: gameList.tasks.length,
     isCurrentUser: p.user.id === loggedInUser?.id,
   }));
 
-  // Tenta encontrar o jogador atual na lista de participantes
-  let currentPlayer = players.find(p => p.isCurrentUser);
-
-  // Se o jogador atual não for encontrado, verifica se ele é o criador da missão.
-  // Se for, o adiciona à lista de jogadores para corrigir o erro.
-  if (!currentPlayer && loggedInUser && gameList.createdById === loggedInUser.id) {
-    const creatorAsPlayer: Player = {
-      id: loggedInUser.id,
-      name: loggedInUser.name,
-      avatar: loggedInUser.avatar || '',
-      totalPoints: 0, // O criador não tem pontos se não for um participante formal
-      completedTasks: 0,
-      totalTasks: gameList.tasks.length,
-      isCurrentUser: true,
-    };
-    players.push(creatorAsPlayer);
-    currentPlayer = creatorAsPlayer;
-  }
-  
-  // Se mesmo assim o jogador não for encontrado, exibe uma mensagem de erro.
-  if (!currentPlayer) {
-    return (
-        <div className="flex flex-col items-center justify-center h-screen bg-yellow-100 text-purple-800">
-            <h1 className="text-2xl font-bold mb-4">Erro: Acesso não autorizado.</h1>
-            <p className="mb-8">Você não é o criador nem um participante desta missão.</p>
-            <Button onClick={onBack} className="bg-pink-500 text-white">Voltar</Button>
-        </div>
-    );
-  }
+  // Encontra o jogador atual de forma segura no array mapeado
+  const currentPlayer = players.find(p => p.isCurrentUser);
 
   const handleToggleTask = (id: string) => {
     setTasks(prevTasks =>
@@ -83,7 +57,6 @@ export function GameScreen({ gameList, onBack }: GameScreenProps) {
 
   const handleDeleteTask = (id: string) => {
     setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
-    alert('Checkpoint removido! 🗑️');
   };
 
   const handleAddTask = (taskData: Omit<Task, 'id' | 'completed' | 'createdAt'>) => {
@@ -97,6 +70,11 @@ export function GameScreen({ gameList, onBack }: GameScreenProps) {
     setTasks(prevTasks => [...prevTasks, newTask]);
     alert('Novo checkpoint adicionado! 🚀');
   };
+
+  // Se o jogador atual não for encontrado, exibe uma mensagem de carregamento para evitar o erro
+  if (!currentPlayer) {
+    return <div>Carregando dados do jogador...</div>;
+  }
 
   if (!showTaskList) {
     return (
@@ -153,7 +131,7 @@ export function GameScreen({ gameList, onBack }: GameScreenProps) {
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary" className="bg-pink-300/80 text-pink-700 border-2 border-pink-500 shadow-sm">
                   <Users size={12} className="mr-1" />
-                  {players.length}
+                  {gameList.participants.length}
                 </Badge>
                 <Badge variant="secondary" className="bg-yellow-300/80 text-yellow-800 border-2 border-yellow-500 shadow-sm font-bold">
                   <Trophy size={12} className="mr-1" />

@@ -60,7 +60,6 @@ export function AddMissionScreen({ onBack, onSaveMission }: AddMissionScreenProp
     setSteps([...steps, newStep]);
     setCurrentStep({ title: '', description: '', points: 10, deadline: '', bossType: 'none', bossName: '' });
 
-    alert('Etapa adicionada! 🎉');
   };
 
   const handleRemoveStep = (id: string) => { setSteps(steps.filter(step => step.id !== id)); toast.info('Etapa removida'); };
@@ -76,7 +75,6 @@ export function AddMissionScreen({ onBack, onSaveMission }: AddMissionScreenProp
         steps 
     });
 
-    alert('Missao criada com sucesso! 🌟');
   };
 
   return (
@@ -123,18 +121,18 @@ export function AddMissionScreen({ onBack, onSaveMission }: AddMissionScreenProp
               <div>
           
                 
-                {currentStep.bossType !== 'none' && (
+                
                   <div className="mt-4 mb-2">
-                    <Label htmlFor="bossName" className="text-purple-700">Nome do Chefao*</Label>
+                    <Label htmlFor="bossName" className="text-purple-700">Nome do(a) professor(a)</Label>
                     <Input
                       id="bossName"
                       value={currentStep.bossName}
                       onChange={(e) => setCurrentStep({ ...currentStep, bossName: e.target.value })}
-                      placeholder="Ex: Peixoto, o Conquistador"
+                      placeholder="Ex: Daniela da Computacao Paralela"
                       className="mt-1 bg-white/80 border-2 border-pink-300 focus:border-purple-400"
                     />
                   </div>
-                )}
+                
                 
                 {/* 👇 ATUALIZAcaO 2: Grid com 3 colunas e botões menores */}
                 <div className="grid grid-cols-3 gap-3 mt-2">

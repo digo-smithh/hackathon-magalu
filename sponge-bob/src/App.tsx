@@ -94,8 +94,6 @@ function AppContent() {
 
     createMissionWithTasks(finalMissionPayload);
 
-    alert('Missão criada com sucesso! 🌟');
-
     setRefreshKey(prev => prev + 1);
     setCurrentScreen('home');
   };
