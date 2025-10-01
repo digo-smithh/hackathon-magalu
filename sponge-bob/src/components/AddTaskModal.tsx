@@ -24,7 +24,7 @@ export function AddTaskModal({ onAddTask }: AddTaskModalProps) {
   const bossOptions: { value: BossType; label: string; emoji: string }[] = [
     { value: 'none', label: 'Sem Chefão', emoji: '🌊' },
     { value: 'plankton', label: 'Plâncton', emoji: '🦠' },
-    { value: 'mermaid-man', label: 'Sereia Elástico', emoji: '🦸' },
+    { value: 'mermaid-man', label: 'oSereia Elástic', emoji: '🦸' },
     { value: 'dennis', label: 'Dennis', emoji: '💪' },
     { value: 'bubble-bass', label: 'Bubble Bass', emoji: '🐟' },
     { value: 'flying-dutchman', label: 'Holandês Voador', emoji: '👻' }

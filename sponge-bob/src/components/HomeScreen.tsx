@@ -1,45 +1,25 @@
-import { useEffect, useState } from 'react';
+// src/components/HomeScreen.tsx
+
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Plus, Play, Users, Trophy, Sparkles } from 'lucide-react';
 import { GameList } from '../types/task';
 import { ImageWithFallback } from './figma/ImageWithFallback';
-import { getMissionsByUser } from '../API/userService.ts';
-import { useAuth } from '../auth/AuthProvider.tsx';
 
 interface HomeScreenProps {
+  gameLists: GameList[];
   onSelectList: (list: GameList) => void;
   onCreateMission: () => void;
   onCreateAIMission?: () => void;
   onRefresh: () => void;
 }
 
-export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, onRefresh }: HomeScreenProps) {
-  const { user } = useAuth();
-  const [missions, setMissions] = useState<GameList[]>([]);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const data = await getMissionsByUser(user?.id); // Replace '1' with actual user ID
-        console.log('Fetched missions:', data);
-        setMissions(data);
-      }
-      catch (error) {
-        console.error('Error fetching missions:', error);
-      }
-    }
-    
-    fetchData();
-  }, []);
-
-   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ 
-
+export function HomeScreen({ gameLists, onSelectList, onCreateMission, onCreateAIMission, onRefresh }: HomeScreenProps) {
+  return (
+    <div className="min-h-screen relative overflow-hidden" style={{
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
-      
       backgroundImage: `
         radial-gradient(circle at 10% 20%, rgba(255, 255, 0, 0.15) 0%, transparent 40%),
         radial-gradient(circle at 90% 30%, rgba(255, 105, 180, 0.15) 0%, transparent 40%),
@@ -47,7 +27,7 @@ export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, on
         url('/fundo-menu.jpg')
       `
     }}>
-      {/* Bikini Bottom Decorative Elements - Bubbles */}
+      {/* Elementos decorativos */}
       <div className="absolute top-20 left-10 w-12 h-12 rounded-full bg-white/30 animate-pulse" />
       <div className="absolute top-40 right-20 w-8 h-8 rounded-full bg-white/40 animate-pulse" style={{ animationDelay: '1s' }} />
       <div className="absolute bottom-40 left-1/4 w-16 h-16 rounded-full bg-white/25 animate-pulse" style={{ animationDelay: '2s' }} />
@@ -59,7 +39,6 @@ export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, on
         <div className="text-center mb-16">
           <div className="flex items-center justify-center mb-6">
             <div className="relative">
-              {/* Pineapple Icon */}
               <div className="w-20 h-20 relative">
                 <div className="absolute bottom-0 w-full h-16 bg-gradient-to-b from-yellow-400 to-yellow-500 rounded-lg" style={{
                   clipPath: 'polygon(20% 0%, 80% 0%, 95% 20%, 95% 80%, 80% 100%, 20% 100%, 5% 80%, 5% 20%)'
@@ -80,7 +59,7 @@ export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, on
           </p>
         </div>
 
-        {/* Action Buttons */}
+        {/* Botões de Ação */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
           <Button 
             size="lg"
@@ -101,17 +80,17 @@ export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, on
               Criar com IA
             </Button>
           )}
-        </div>
+        </div>
 
-        {/* Game Lists Grid */}
-        {missions?.length > 0 && (
+        {/* Grade de Missões */}
+        {gameLists.length > 0 && (
           <div>
             <h2 className="text-pink-600 text-2xl font-bold text-center mb-8 drop-shadow-md">
               Suas Missões na Fenda do Biquini
             </h2>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {missions.map(list => (
+              {gameLists.map(list => (
                 <Card 
                   key={list.id}
                   className="bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-100 border-4 border-yellow-400 shadow-2xl hover:shadow-pink-400/50 transition-all duration-300 hover:scale-105 cursor-pointer group"
@@ -126,24 +105,24 @@ export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, on
                       {list.description}
                     </CardDescription>
                   </CardHeader>
-{/*                   
+                  
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center text-purple-700">
                         <Users size={14} className="mr-1" />
-                        <span>{list.players?.length} aventureir{list.players?.length !== 1 ? 'os' : 'o'}</span>
+                        <span>{list.participants.length} aventureiro{list.participants.length !== 1 ? 's' : ''}</span>
                       </div>
                       
                       <div className="flex items-center text-yellow-700 font-bold">
                         <Trophy size={14} className="mr-1" />
                         <span>
-                          {list.players.find(p => p.isCurrentUser)?.totalPoints || 0} ⭐
+                          {list.participants.find(p => p.isCurrentUser)?.totalPoints || 0} ⭐
                         </span>
                       </div>
                     </div>
                     
                     <div className="mt-3 flex -space-x-2">
-                      {list.players.slice(0, 3).map(player => (
+                      {list.participants.slice(0, 3).map(player => (
                         <div
                           key={player.id}
                           className="w-8 h-8 rounded-full border-2 border-pink-400 overflow-hidden bg-gradient-to-br from-yellow-200 to-pink-200 shadow-md"
@@ -155,21 +134,21 @@ export function HomeScreen({onSelectList, onCreateMission, onCreateAIMission, on
                           />
                         </div>
                       ))}
-                      {list.players?.length > 3 && (
+                      {list.participants.length > 3 && (
                         <div className="w-8 h-8 rounded-full border-2 border-pink-400 bg-gradient-to-br from-yellow-200 to-pink-200 flex items-center justify-center text-xs text-purple-700 font-bold shadow-md">
-                          +{list.players.length - 3}
+                          +{list.participants.length - 3}
                         </div>
                       )}
                     </div>
-                  </CardContent> */}
+                  </CardContent>
                 </Card>
               ))}
             </div>
           </div>
         )}
 
-        {/* Empty State */}
-        {missions?.length === 0 && (
+        {/* Estado Vazio */}
+        {gameLists.length === 0 && (
           <Card className="bg-gradient-to-br from-yellow-200 to-pink-500 border-purple-400 shadow-2xl max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <div className="text-6xl mb-4">🍍</div>

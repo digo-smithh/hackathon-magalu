@@ -1,3 +1,5 @@
+// src/components/AICreateMissionScreen.tsx
+
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -5,10 +7,10 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ArrowLeft, Sparkles, Trash2, Edit2, Plus, Check } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { BossType } from '../types/task';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { planMission } from '../API/AIService';
+import { planMissionWithAI } from '../API/aiService'; // Importando o novo serviço de IA
 
 interface AICreateMissionScreenProps {
   onBack: () => void;
@@ -22,6 +24,7 @@ interface AICreateMissionScreenProps {
       points: number;
       deadline: string;
       bossType: BossType;
+      bossName: string; // Adicionado para consistência
     }>;
   }) => void;
 }
@@ -33,6 +36,7 @@ interface GeneratedTask {
   points: number;
   deadline: string;
   bossType: BossType;
+  bossName: string; // Adicionado para consistência
 }
 
 export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMissionScreenProps) {
@@ -44,7 +48,6 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<GeneratedTask | null>(null);
 
-  // Placeholder for AI generation - você substituirá isso pela sua integração de IA
   const handleGenerateWithAI = async () => {
     if (!aiPrompt.trim()) {
       toast.error('Ops! 🐠', {
@@ -54,21 +57,40 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
     }
 
     setIsGenerating(true);
-    
-      const response = await planMission(aiPrompt);
 
-      console.log('AI Response:', response);
+    try {
+      // 1. Chamar a API de IA real
+      const aiTasks = await planMissionWithAI(aiPrompt);
 
-      setMissionName(response.missionName);
-      setMissionDescription(response.missionDescription);
-      setGeneratedTasks(response.tasks);
+      // 2. Mapear a resposta da IA para o formato de tarefa do frontend
+      const formattedTasks: GeneratedTask[] = aiTasks.map((task, index) => ({
+        id: `task-${Date.now()}-${index}`,
+        title: task.title,
+        description: task.description,
+        points: task.points,
+        // Adiciona um prazo padrão de 3 dias a partir de hoje
+        deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        bossType: 'none' as BossType,
+        bossName: '',
+      }));
+
+      // 3. Preencher os estados com a resposta
+      setMissionName(aiPrompt); // Preenche o nome da missão com o prompt
+      setMissionDescription(''); // Limpa a descrição para o usuário preencher
+      setGeneratedTasks(formattedTasks);
       
       toast.success('🧽 Missão gerada!', {
-        description: 'Revise as tasks e faça ajustes se necessário.',
+        description: 'Revise as tarefas e preencha os detalhes da missão.',
       });
-      
+
+    } catch (error) {
+      console.error("Erro ao gerar missão com IA:", error);
+      toast.error('O Polvo Mágico está ocupado!', {
+        description: 'Não foi possível gerar a missão com a IA. Tente novamente mais tarde.',
+      });
+    } finally {
       setIsGenerating(false);
-    
+    }
   };
 
   const handleEditTask = (task: GeneratedTask) => {
@@ -84,22 +106,23 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
     );
     setEditingTaskId(null);
     setEditForm(null);
-    toast.success('✅ Task atualizada!');
+    toast.success('✅ Tarefa atualizada!');
   };
 
   const handleDeleteTask = (taskId: string) => {
     setGeneratedTasks(tasks => tasks.filter(task => task.id !== taskId));
-    toast.success('🗑️ Task removida!');
+    toast.success('🗑️ Tarefa removida!');
   };
 
   const handleAddNewTask = () => {
     const newTask: GeneratedTask = {
       id: `task-${Date.now()}`,
-      title: 'Nova Task',
+      title: 'Nova Tarefa',
       description: '',
       points: 10,
       deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       bossType: 'none',
+      bossName: ''
     };
     setGeneratedTasks([...generatedTasks, newTask]);
     handleEditTask(newTask);
@@ -115,7 +138,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
 
     if (generatedTasks.length === 0) {
       toast.error('Ops! 📋', {
-        description: 'Adicione pelo menos uma task à missão.',
+        description: 'Adicione pelo menos uma tarefa à missão.',
       });
       return;
     }
@@ -146,7 +169,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
               ✨ Criar Missão com IA
             </h1>
             <p className="text-sm" style={{ color: '#030213', opacity: 0.7 }}>
-              Descreva sua missão e deixe a IA gerar as tasks!
+              Descreva sua missão e deixe a IA gerar as tarefas!
             </p>
           </div>
         </div>
@@ -159,7 +182,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
               Descreva sua Missão
             </CardTitle>
             <CardDescription>
-              Escreva livremente sobre o que você quer fazer. A IA vai transformar em tasks organizadas!
+              Escreva livremente sobre o que você quer fazer. A IA vai transformar em tarefas organizadas!
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -209,10 +232,10 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
           </CardContent>
         </Card>
 
-        {/* Generated Mission */}
+        {/* Missão Gerada */}
         {generatedTasks.length > 0 && (
           <>
-            {/* Mission Details */}
+            {/* Detalhes da Missão */}
             <Card className="border-4" style={{ borderColor: '#66D9EF', background: 'rgba(255, 255, 255, 0.95)' }}>
               <CardHeader>
                 <CardTitle style={{ color: '#FF0000' }}>📋 Detalhes da Missão</CardTitle>
@@ -242,12 +265,12 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
               </CardContent>
             </Card>
 
-            {/* Generated Tasks */}
+            {/* Tarefas Geradas */}
             <Card className="border-4" style={{ borderColor: '#FF69B4', background: 'rgba(255, 255, 255, 0.95)' }}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle style={{ color: '#DA70D6' }}>
-                    🎯 Tasks Geradas ({generatedTasks.length})
+                    🎯 Tarefas Geradas ({generatedTasks.length})
                   </CardTitle>
                   <Button
                     onClick={handleAddNewTask}
@@ -255,7 +278,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
                     style={{ background: '#00FF7F', color: '#030213' }}
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Adicionar Task
+                    Adicionar Tarefa
                   </Button>
                 </div>
               </CardHeader>
@@ -270,11 +293,11 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
                     }}
                   >
                     {editingTaskId === task.id && editForm ? (
-                      // Edit Mode
+                      // Modo de Edição
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between mb-2">
+                         <div className="flex items-center justify-between mb-2">
                           <span className="px-2 py-1 rounded" style={{ background: '#FFE135', color: '#030213' }}>
-                            Task {index + 1}
+                            Tarefa {index + 1}
                           </span>
                           <div className="flex gap-2">
                             <Button
@@ -335,7 +358,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
                         </div>
 
                         <div className="space-y-2">
-                          <Label>Boss (Opcional)</Label>
+                          <Label>Chefão (Opcional)</Label>
                           <Select
                             value={editForm.bossType}
                             onValueChange={(value) => setEditForm({ ...editForm, bossType: value as BossType })}
@@ -344,7 +367,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">Sem Boss</SelectItem>
+                              <SelectItem value="none">Sem Chefão</SelectItem>
                               <SelectItem value="plankton">🦠 Plankton</SelectItem>
                               <SelectItem value="mermaid-man">🦸 Homem Sereia</SelectItem>
                               <SelectItem value="dennis">😈 Dennis</SelectItem>
@@ -355,13 +378,13 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
                         </div>
                       </div>
                     ) : (
-                      // View Mode
+                      // Modo de Visualização
                       <div>
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <span className="px-2 py-1 rounded text-sm" style={{ background: '#FFE135', color: '#030213' }}>
-                                Task {index + 1}
+                                Tarefa {index + 1}
                               </span>
                               <span style={{ color: '#FF0000' }}>{task.title}</span>
                             </div>
@@ -395,7 +418,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
                           </span>
                           {task.bossType !== 'none' && (
                             <span className="px-2 py-1 rounded" style={{ background: '#DA70D6', color: '#ffffff' }}>
-                              Boss: {task.bossType}
+                              Chefão: {task.bossType}
                             </span>
                           )}
                         </div>
@@ -406,7 +429,7 @@ export function AICreateMissionScreen({ onBack, onSaveMission }: AICreateMission
               </CardContent>
             </Card>
 
-            {/* Save Button */}
+            {/* Botão Salvar */}
             <Button
               onClick={handleSaveMission}
               className="w-full h-14"

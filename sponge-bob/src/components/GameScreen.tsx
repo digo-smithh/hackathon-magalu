@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+// src/components/GameScreen.tsx
+
+import { useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { AddTaskModal } from './AddTaskModal';
@@ -6,42 +8,59 @@ import { TaskItem } from './TaskItem';
 import { FullscreenGameMap } from './FullscreenGameMap';
 import { ArrowLeft, Users, Trophy, List, Map } from 'lucide-react';
 import { GameList, Task, Player } from '../types/task';
-import { getMission } from '../API/missionService';
 import { useAuth } from '../auth/AuthProvider';
 
 interface GameScreenProps {
+  gameList: GameList;
   onBack: () => void;
   onUpdateLists?: () => void;
 }
 
-export function GameScreen({ onBack }: GameScreenProps) {
-  const { user } = useAuth();
-
-  const [gameList, setMissions] = useState<GameList>();
-
+export function GameScreen({ gameList, onBack }: GameScreenProps) {
+  const { user: loggedInUser } = useAuth();
+  const [tasks, setTasks] = useState<Task[]>(gameList.tasks);
   const [showTaskList, setShowTaskList] = useState(false);
 
-  const currentPlayer = gameList.participants.find(p => p.isCurrentUser)!;
-  const tasks = gameList.tasks;
+  // Mapeia os participantes recebidos do backend para o tipo 'Player' que o frontend utiliza
+  const players: Player[] = gameList.participants.map(p => ({
+    id: p.user.id,
+    name: p.user.name,
+    avatar: p.user.avatar || '',
+    totalPoints: p.total_points,
+    completedTasks: 0, // O backend não fornece este dado, então usamos um valor padrão
+    totalTasks: gameList.tasks.length,
+    isCurrentUser: p.user.id === loggedInUser?.id,
+  }));
 
-   useEffect(() => {
-     async function fetchData() {
-       try {
-        const data = await getMission()
+  // Tenta encontrar o jogador atual na lista de participantes
+  let currentPlayer = players.find(p => p.isCurrentUser);
 
-        console.log('Fetched mission:', data);
-
-        setTasks(data.tasks);
-        setMission(data);
-       }
-       catch (error) {
-         console.error('Error fetching missions:', error);
-       }
-     }
-     
-     fetchData();
-   }, [selectedGameListId]);
- 
+  // Se o jogador atual não for encontrado, verifica se ele é o criador da missão.
+  // Se for, o adiciona à lista de jogadores para corrigir o erro.
+  if (!currentPlayer && loggedInUser && gameList.createdById === loggedInUser.id) {
+    const creatorAsPlayer: Player = {
+      id: loggedInUser.id,
+      name: loggedInUser.name,
+      avatar: loggedInUser.avatar || '',
+      totalPoints: 0, // O criador não tem pontos se não for um participante formal
+      completedTasks: 0,
+      totalTasks: gameList.tasks.length,
+      isCurrentUser: true,
+    };
+    players.push(creatorAsPlayer);
+    currentPlayer = creatorAsPlayer;
+  }
+  
+  // Se mesmo assim o jogador não for encontrado, exibe uma mensagem de erro.
+  if (!currentPlayer) {
+    return (
+        <div className="flex flex-col items-center justify-center h-screen bg-yellow-100 text-purple-800">
+            <h1 className="text-2xl font-bold mb-4">Erro: Acesso não autorizado.</h1>
+            <p className="mb-8">Você não é o criador nem um participante desta missão.</p>
+            <Button onClick={onBack} className="bg-pink-500 text-white">Voltar</Button>
+        </div>
+    );
+  }
 
   const handleToggleTask = (id: string) => {
     setTasks(prevTasks =>
@@ -79,12 +98,11 @@ export function GameScreen({ onBack }: GameScreenProps) {
     alert('Novo checkpoint adicionado! 🚀');
   };
 
-  // Fullscreen map view
   if (!showTaskList) {
     return (
       <FullscreenGameMap
         tasks={tasks}
-        players={gameList.players}
+        players={players}
         currentPlayer={currentPlayer}
         onBack={() => setShowTaskList(true)}
         onToggleTask={handleToggleTask}
@@ -92,7 +110,6 @@ export function GameScreen({ onBack }: GameScreenProps) {
     );
   }
 
-  // Task list view
   return (
     <div className="min-h-screen" style={{ 
       background: 'linear-gradient(to bottom, #87CEEB 0%, #7DD3C0 40%, #66D9EF 70%, #F5DEB3 100%)',
@@ -102,7 +119,6 @@ export function GameScreen({ onBack }: GameScreenProps) {
         radial-gradient(circle at 50% 80%, rgba(218, 112, 214, 0.15) 0%, transparent 30%)
       `
     }}>
-      {/* Header */}
       <div className="bg-gradient-to-r from-pink-400/40 to-purple-400/40 backdrop-blur-sm border-b-4 border-yellow-400 shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -137,7 +153,7 @@ export function GameScreen({ onBack }: GameScreenProps) {
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary" className="bg-pink-300/80 text-pink-700 border-2 border-pink-500 shadow-sm">
                   <Users size={12} className="mr-1" />
-                  {gameList.players.length}
+                  {players.length}
                 </Badge>
                 <Badge variant="secondary" className="bg-yellow-300/80 text-yellow-800 border-2 border-yellow-500 shadow-sm font-bold">
                   <Trophy size={12} className="mr-1" />

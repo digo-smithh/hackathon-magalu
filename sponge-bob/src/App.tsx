@@ -6,10 +6,12 @@ import { GameScreen } from './components/GameScreen';
 import { AddMissionScreen, TaskStep } from './components/AddMissionScreen';
 import { Toaster } from './components/ui/sonner';
 import { GameList, Task } from './types/task';
-import { createMissionWithTasks } from './API/missionService';
+import { createMissionWithTasks, getMission } from './API/missionService';
 import { AuthProvider, useAuth } from './auth/AuthProvider';
 import { LoginScreen } from './components/LoginScreen';
 import { AICreateMissionScreen } from './components/AICreateMissionScreen';
+import { getMissionsByUser } from './API/userService';
+import { toast } from 'sonner';
 
 type Screen = 'home' | 'game' | 'add-mission' | 'sign-up' | 'login' | 'ai-create-mission';
 
@@ -17,24 +19,39 @@ function AppContent() {
   const { user } = useAuth();
 
   const [currentScreen, setCurrentScreen] = useState<Screen>('home');
-  const [selectedGameListId, setSelectedGameListId] = useState<string | null>(null);
+  const [selectedGameList, setSelectedGameList] = useState<GameList | null>(null);
+  const [gameLists, setGameLists] = useState<GameList[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  useEffect(() => {
+    async function loadGameLists() {
+      if (user) {
+        try {
+          const missions = await getMissionsByUser(user.id);
+          setGameLists(missions);
+        } catch (error) {
+          console.error("Erro ao buscar missões:", error);
+          toast.error("Falha ao carregar as missões.");
+        }
+      }
+    }
+    loadGameLists();
+  }, [refreshKey, user]);
+
   const handleSelectList = async (gameList: GameList) => {
-  try {
-    // Busca os detalhes completos da missão, incluindo as tarefas
-    const fullGameList = await getMission(gameList.id);
-    setSelectedGameList(fullGameList); // Armazena o objeto completo no estado
-    setCurrentScreen('game');
-  } catch (error) {
-    console.error("Erro ao buscar detalhes da missão:", error);
-    toast.error("Não foi possível carregar os detalhes da missão.");
-  }
-};
+    try {
+      const fullGameList = await getMission(gameList.id);
+      setSelectedGameList(fullGameList);
+      setCurrentScreen('game');
+    } catch (error) {
+      console.error("Erro ao buscar detalhes da missão:", error);
+      toast.error("Não foi possível carregar os detalhes da missão.");
+    }
+  };
 
   const handleBackToHome = () => {
     setCurrentScreen('home');
-    setSelectedGameListId(null);
+    setSelectedGameList(null);
     setRefreshKey(prev => prev + 1);
   };
 
@@ -49,9 +66,8 @@ function AppContent() {
   const handleSaveMission = (missionData: {
     name: string;
     description: string;
-    steps: TaskStep[]; // Recebe os 'steps' do formulário
+    steps: TaskStep[];
   }) => {
-    // Converte 'steps' do formulário para o formato 'Task' da API
     const tasks: Omit<Task, 'id'>[] = missionData.steps.map((step) => ({
       title: step.title,
       description: step.description,
@@ -64,18 +80,16 @@ function AppContent() {
       bossName: step.bossName,
     }));
 
-    // Lógica para a tarefa final
     if (tasks.length > 0) {
       tasks[tasks.length - 1].isFinal = true;
       tasks[tasks.length - 1].points *= 2;
     }
     
-    // Monta o objeto final que será enviado para a API
     const finalMissionPayload = {
       name: missionData.name,
       description: missionData.description,
-      createdById: user ? user.id : '', // Chave correta para o backend
-      tasks: tasks, // Envia o array de 'tasks' formatado
+      createdById: user ? user.id : '',
+      tasks: tasks,
     };
 
     createMissionWithTasks(finalMissionPayload);
@@ -96,7 +110,6 @@ function AppContent() {
     setCurrentScreen('login');
   }
 
-  // Lógica de renderização
   if (!user) {
     return <LoginScreen onLoginSuccess={handleOnLoginSuccess} onNavigateToSignUp={handleOnNavigateToSignUp}/>;
   }
@@ -106,6 +119,7 @@ function AppContent() {
       <div className="min-h-screen">
         {currentScreen === 'home' && (
           <HomeScreen
+            gameLists={gameLists}
             onSelectList={handleSelectList}
             onCreateMission={handleCreateMission}
             onCreateAIMission={handleCreateAIMission}
@@ -115,6 +129,7 @@ function AppContent() {
         
         {currentScreen === 'game' && selectedGameList && (
           <GameScreen
+            gameList={selectedGameList}
             onBack={handleBackToHome}
             onUpdateLists={() => setRefreshKey(prev => prev + 1)}
           />
