@@ -4,6 +4,7 @@
 Bem-vindo ao Bob Esponja em: derrotando matérias, uma aplicação de lista de tarefas gamificada que transforma seus objetivos em missões épicas na Fenda do Biquíni\! Crie tarefas manualmente ou use o poder da Inteligência Artificial para gerar um plano de ação
 
 Este repositório contém tanto o **Backend** (API em FastAPI) quanto o **Frontend** (aplicação em React).
+# Durante o hackathon você poderá testar a aplicação [aqui](http://201.23.71.157:3000)
 
 ## ✨ Funcionalidades
 
