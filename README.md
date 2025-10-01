@@ -38,6 +38,8 @@ Este repositório contém tanto o **Backend** (API em FastAPI) quanto o **Fronte
   * **Ícones**: Lucide React
   * **Requisições HTTP**: Axios
 
+
+
 ## 🚀 Como Executar o Projeto
 
 Siga os passos abaixo para rodar a aplicação completa (Backend e Frontend) localmente.
@@ -153,3 +155,56 @@ O projeto está configurado para ser implantado em uma máquina virtual na Magal
     ```bash
     terraform destroy
     ```
+
+
+## 🎮 Como Usar
+
+### 1️⃣ Primeiro Acesso
+
+1. **Abra o site**
+2. **Clique em "Criar Conta"**
+3. **Preencha seus dados:**
+   - Nome
+   - Email
+   - Senha
+4. **Faça login** com suas credenciais
+
+### 2️⃣ Criar uma Missão
+
+#### Opção A: Criar Manualmente
+1. Na tela inicial, clique em **"Criar Nova Missão"**
+2. **Preencha:**
+   - Nome da missão
+   - Descrição
+   - Escolha um boss
+3. **Adicione tarefas:**
+   - Clique em **"Adicionar Task"**
+   - Preencha título, descrição, pontos, prazo
+4. Clique em **"Criar Missão"**
+
+#### Opção B: Criar com IA 🤖
+1. Na tela inicial, clique em **"Criar com IA"**
+2. **Escreva uma descrição livre** da sua missão
+3. Clique em **"Gerar Missão com IA"**
+4. **Aguarde o processamento** (2-5 segundos)
+5. **Revise as tasks geradas:**
+   - Edite qualquer informação
+   - Adicione ou remova tasks
+6. Clique em **"Salvar Missão"**
+
+### 3️⃣ Jogar uma Missão
+
+1. Na tela inicial, **clique em uma missão criada**
+2. **Visualize suas tarefas**
+3. **Marque tarefas como completas** clicando no checkbox
+4. **Acompanhe seu progresso** no topo da tela
+
+## 📝 Licença
+
+Este projeto é de código aberto para fins educacionais.
+
+⚠️ **Nota:** Bob Esponja e personagens relacionados são propriedade da Nickelodeon/Viacom. Este projeto é uma homenagem feita por fãs sem fins lucrativos.
+
+## 💬 Contato
+
+Dúvidas ou sugestões? Entre em contato!
